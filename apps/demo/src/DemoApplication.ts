@@ -6,6 +6,7 @@ import {
 
 import { demoAssets } from "./assets/demoAssets";
 import { demoDialoguesData } from "./data/demoDialoguesData";
+import { demoItemsData } from "./data/demoItemsData";
 import { demoRoomsData } from "./data/demoRoomsData";
 import { GameScene } from "./scenes/GameScene";
 
@@ -32,6 +33,7 @@ export class DemoApplication {
             ),
             assets: demoAssets,
             requiredAssetIds,
+            inventoryItems: demoItemsData,
             config: {
                 debug: {
                     enabled: true,

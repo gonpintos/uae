@@ -17,6 +17,10 @@ export * from "./graphics/RenderLayer";
 export * from "./input/InputManager";
 export * from "./input/BrowserInputManager";
 
+export * from "./inventory/Inventory";
+export * from "./inventory/InventoryItemCatalog";
+export * from "./inventory/InventoryItemData";
+
 export * from "./interaction/Rectangle";
 export * from "./interaction/Hotspot";
 export * from "./interaction/HotspotCollection";
@@ -45,3 +49,4 @@ export * from "./state/GameStateData";
 export * from "./ui/GameLayout";
 export * from "./ui/MessageBox";
 export * from "./ui/DialoguePanel";
+export * from "./ui/InventoryPanel";

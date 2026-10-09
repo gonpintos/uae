@@ -5,6 +5,7 @@ import {
     DialogueSession,
     GameLayout,
     HotspotDebugRenderer,
+    InventoryPanel,
     InteractionExecutor,
     MessageBox,
     RoomCollection,
@@ -29,6 +30,8 @@ export class GameScene implements Scene {
     private readonly dialoguePanel = new DialoguePanel();
 
     private readonly hotspotDebugRenderer = new HotspotDebugRenderer();
+
+    private readonly inventoryPanel = new InventoryPanel();
 
     private readonly layout = new GameLayout({messageBoxHeight: 110});
 
@@ -55,7 +58,8 @@ export class GameScene implements Scene {
     public enter(context: SceneContext): void {
         this.dialogueSession = new DialogueSession(
             this.dialogues,
-            context.state
+            context.state,
+            context.inventory
         );
 
         this.drawScreen(context);
@@ -170,6 +174,11 @@ export class GameScene implements Scene {
             context.renderer,
             messageBoxBounds,
             this.message
+        );
+
+        this.inventoryPanel.draw(
+            context.renderer,
+            context.inventory.items
         );
 
         const dialogueView = this.getDialogueSession().view;

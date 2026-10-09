@@ -2,9 +2,13 @@ import { DialogueCollection } from "../../../packages/engine/src/dialogue/Dialog
 import { DialogueSession } from "../../../packages/engine/src/dialogue/DialogueSession";
 import { RenderLayer } from "../../../packages/engine/src/graphics/RenderLayer";
 import type { Renderer } from "../../../packages/engine/src/graphics/Renderer";
+import { Inventory } from "../../../packages/engine/src/inventory/Inventory";
+import { InventoryItemCatalog } from "../../../packages/engine/src/inventory/InventoryItemCatalog";
 import { GameState } from "../../../packages/engine/src/state/GameState";
 import { DialoguePanel } from "../../../packages/engine/src/ui/DialoguePanel";
+import { InventoryPanel } from "../../../packages/engine/src/ui/InventoryPanel";
 import { demoDialoguesData } from "../src/data/demoDialoguesData";
+import { demoItemsData } from "../src/data/demoItemsData";
 
 function assert(condition: boolean, message: string): void {
     if (!condition) {
@@ -15,6 +19,10 @@ function assert(condition: boolean, message: string): void {
 const state = new GameState({
     chapter: "copenhagen"
 });
+
+const inventory = new Inventory(
+    new InventoryItemCatalog(demoItemsData)
+);
 
 state.setFlag("intro-seen");
 state.setValue("attempts", 1);
@@ -31,10 +39,12 @@ assert(
 
 const session = new DialogueSession(
     new DialogueCollection(demoDialoguesData),
-    state
+    state,
+    inventory
 );
 
 const drawnLayers: number[] = [];
+const drawnTexts: string[] = [];
 
 const renderer = {
     getSize: () => ({
@@ -44,8 +54,9 @@ const renderer = {
     drawRectangle: (options: {layer?: number}) => {
         drawnLayers.push(options.layer ?? 0);
     },
-    drawText: (options: {layer?: number}) => {
+    drawText: (options: {layer?: number; text: string}) => {
         drawnLayers.push(options.layer ?? 0);
+        drawnTexts.push(options.text);
     }
 } as unknown as Renderer;
 
@@ -156,17 +167,36 @@ assert(
     "Franco should thank Fede before the dialogue closes."
 );
 assert(
-    state.getFlag("calculator-owned"),
-    "The calculator option should set calculator-owned."
+    inventory.has("calculator"),
+    "The calculator option should add the calculator to the inventory."
+);
+assert(
+    state.getValue("calculator-owned") === undefined,
+    "Calculator ownership should not be duplicated in GameState."
 );
 assert(
     session.view === null,
     "Fede dialogue should close after giving the calculator."
 );
 
-session.start("fede-sunglasses");
+const inventoryPanel = new InventoryPanel();
 
-const ownerFedeView = session.view;
+inventoryPanel.draw(renderer, inventory.items);
+
+assert(
+    drawnTexts.includes("• Calculadora"),
+    "The visual inventory should render the acquired calculator."
+);
+
+const reopenedSession = new DialogueSession(
+    new DialogueCollection(demoDialoguesData),
+    state,
+    inventory
+);
+
+reopenedSession.start("fede-sunglasses");
+
+const ownerFedeView = reopenedSession.view;
 
 if (!ownerFedeView) {
     throw new Error("Fede dialogue should start after receiving the calculator.");
@@ -185,7 +215,12 @@ assert(
     "The calculator usage question should appear after receiving it."
 );
 
-session.selectOption("leave");
+reopenedSession.selectOption("leave");
+
+assert(
+    inventory.has("calculator"),
+    "The calculator should remain owned after closing the reopened dialogue."
+);
 
 session.start("gon-sunglasses");
 
@@ -217,4 +252,4 @@ assert(
     "Gon dialogue should close after giving the exchange rate."
 );
 
-console.log("Dialogue functional test passed.");
+console.log("Dialogue and inventory functional test passed.");

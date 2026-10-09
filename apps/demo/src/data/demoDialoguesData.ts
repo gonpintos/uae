@@ -20,16 +20,15 @@ export const demoDialoguesData: readonly DialogueData[] = [
                 endsConversation: true,
                 conditions: [
                     {
-                        key: "calculator-owned",
-                        operator: "notEquals",
-                        value: true
+                        type: "hasItem",
+                        itemId: "calculator",
+                        value: false
                     }
                 ],
                 effects: [
                     {
-                        type: "setState",
-                        key: "calculator-owned",
-                        value: true
+                        type: "giveItem",
+                        itemId: "calculator"
                     }
                 ]
             },
@@ -38,8 +37,8 @@ export const demoDialoguesData: readonly DialogueData[] = [
                 playerLine: "¿Cómo se usa esta maravilla?",
                 conditions: [
                     {
-                        key: "calculator-owned",
-                        operator: "equals",
+                        type: "hasItem",
+                        itemId: "calculator",
                         value: true
                     }
                 ]

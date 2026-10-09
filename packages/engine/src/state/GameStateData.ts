@@ -5,6 +5,7 @@ export type GameStateData = Readonly<Record<string, GameStateValue>>;
 export type StateConditionOperator = "equals" | "notEquals";
 
 export interface StateCondition {
+    type: "state";
     key: string;
     operator: StateConditionOperator;
     value: GameStateValue;

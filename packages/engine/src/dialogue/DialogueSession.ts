@@ -1,10 +1,13 @@
 import type { DialogueCollection } from "./DialogueCollection";
 import type {
+    DialogueCondition,
     DialogueData,
+    DialogueEffect,
     DialogueOptionData,
     DialogueSpeakerData
 } from "./DialogueData";
 import type { GameState } from "../state/GameState";
+import type { Inventory } from "../inventory/Inventory";
 
 export interface DialogueTurn {
     playerLine: string;
@@ -30,16 +33,20 @@ export class DialogueSession {
 
     private readonly state: GameState;
 
+    private readonly inventory: Inventory;
+
     private activeDialogue: DialogueData | null = null;
 
     private lastTurn: DialogueTurn | null = null;
 
     public constructor(
         dialogues: DialogueCollection,
-        state: GameState
+        state: GameState,
+        inventory: Inventory
     ) {
         this.dialogues = dialogues;
         this.state = state;
+        this.inventory = inventory;
     }
 
     public get isActive(): boolean {
@@ -87,7 +94,7 @@ export class DialogueSession {
         };
 
         for (const effect of option.effects ?? []) {
-            this.state.apply(effect);
+            this.applyEffect(effect);
         }
 
         if (option.endsConversation) {
@@ -112,7 +119,31 @@ export class DialogueSession {
         dialogue: DialogueData
     ): readonly DialogueOptionData[] {
         return dialogue.options.filter((option) =>
-            this.state.matchesAll(option.conditions ?? [])
+            (option.conditions ?? []).every(
+                (condition) => this.matchesCondition(condition)
+            )
         );
+    }
+
+    private matchesCondition(condition: DialogueCondition): boolean {
+        switch (condition.type) {
+            case "state":
+                return this.state.matches(condition);
+
+            case "hasItem":
+                return this.inventory.has(condition.itemId) === condition.value;
+        }
+    }
+
+    private applyEffect(effect: DialogueEffect): void {
+        switch (effect.type) {
+            case "setState":
+                this.state.apply(effect);
+                break;
+
+            case "giveItem":
+                this.inventory.add(effect.itemId);
+                break;
+        }
     }
 }

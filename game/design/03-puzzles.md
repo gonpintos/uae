@@ -82,8 +82,11 @@ El puzzle queda resuelto.
 
 - `sunglasses-price-known`
 - `exchange-rate-known`
-- `calculator-owned`
 - `sunglasses-price-calculated`
+
+Inventario:
+
+- `calculator`
 
 Valores:
 
@@ -94,7 +97,7 @@ Valores:
 
 El puzzle se considera resuelto cuando:
 
-`calculator-owned`
+`calculator` en inventario
 +
 `sunglasses-price-known`
 +

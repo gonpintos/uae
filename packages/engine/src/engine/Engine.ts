@@ -11,6 +11,9 @@ import type { Renderer } from "../graphics/Renderer";
 import { PixiRenderer } from "../graphics/PixiRenderer";
 import type { InputManager } from "../input/InputManager";
 import { BrowserInputManager } from "../input/BrowserInputManager";
+import { Inventory } from "../inventory/Inventory";
+import { InventoryItemCatalog } from "../inventory/InventoryItemCatalog";
+import type { InventoryItemData } from "../inventory/InventoryItemData";
 import type { Scene } from "../scene/Scene";
 import { SceneManager } from "../scene/SceneManager";
 import { GameState } from "../state/GameState";
@@ -23,6 +26,8 @@ export interface EngineOptions {
     assets?: AssetDefinitions;
     requiredAssetIds?: readonly string[];
     initialState?: GameStateData;
+    inventoryItems?: readonly InventoryItemData[];
+    initialInventoryItemIds?: readonly string[];
 }
 
 export class Engine {
@@ -76,6 +81,10 @@ export class Engine {
 
         const assetCatalog = new AssetCatalog(options.assets);
         const state = new GameState(options.initialState);
+        const inventory = new Inventory(
+            new InventoryItemCatalog(options.inventoryItems),
+            options.initialInventoryItemIds
+        );
         
         await this.renderer.initialize(
             options.container,
@@ -106,7 +115,8 @@ export class Engine {
             this.input,
             config,
             assetCatalog,
-            state
+            state,
+            inventory
         );
 
         this.sceneManager.changeScene(options.initialScene);

@@ -8,14 +8,29 @@ export interface DialogueSpeakerData {
     name: string;
 }
 
+export interface HasItemCondition {
+    type: "hasItem";
+    itemId: string;
+    value: boolean;
+}
+
+export interface GiveItemEffect {
+    type: "giveItem";
+    itemId: string;
+}
+
+export type DialogueCondition = StateCondition | HasItemCondition;
+
+export type DialogueEffect = StateEffect | GiveItemEffect;
+
 export interface DialogueOptionData {
     id: string;
     playerLine: string;
     npcLine?: string;
     playerClosingLine?: string;
     endsConversation?: boolean;
-    conditions?: readonly StateCondition[];
-    effects?: readonly StateEffect[];
+    conditions?: readonly DialogueCondition[];
+    effects?: readonly DialogueEffect[];
 }
 
 export interface DialogueData {
