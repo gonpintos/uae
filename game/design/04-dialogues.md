@@ -28,11 +28,15 @@ Fede:
 
 > «Sí. Tomá.»
 
+Franco:
+
+> «Gracias.»
+
 Efecto:
 
 - `calculator` pasa al inventario de Franco.
 
-Después vuelve el menú.
+Finaliza la conversación.
 
 ---
 
@@ -113,9 +117,7 @@ Efecto:
 - `exchange-rate-known = true`
 - `dkk-per-usd = 7.43`
 
-La opción puede repetirse.
-
-Después vuelve el menú.
+Finaliza la conversación.
 
 ---
 

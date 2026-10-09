@@ -1,0 +1,19 @@
+{
+  "name": "demo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "tsc --ignoreConfig --target ES2023 --module commonjs --moduleResolution node --ignoreDeprecations 6.0 --strict --skipLibCheck --outDir /tmp/uae-dialogue-functional-test --rootDir ../.. test/dialogueFunctional.test.ts ../../packages/engine/src/dialogue/DialogueCollection.ts ../../packages/engine/src/dialogue/DialogueData.ts ../../packages/engine/src/dialogue/DialogueSession.ts src/data/demoDialoguesData.ts && node /tmp/uae-dialogue-functional-test/apps/demo/test/dialogueFunctional.test.js",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1"
+  },
+  "dependencies": {
+    "@uae/engine": "*"
+  }
+}

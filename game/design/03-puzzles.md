@@ -26,6 +26,10 @@ Para resolver el puzzle necesita tres cosas:
    - Se obtiene hablando con `fede`.
    - Item: `calculator`.
 
+Al recibir la calculadora, Franco dice «Gracias.» y la conversación con Fede termina.
+
+Al recibir la cotización, la conversación con Gon termina.
+
 Los tres pasos pueden realizarse en cualquier orden.
 
 ### Convención de la escena
