@@ -1,5 +1,10 @@
 export * from "./assets/AssetCatalog";
 
+export * from "./actor/Actor";
+export * from "./actor/ActorCollection";
+export * from "./actor/ActorData";
+export * from "./actor/ActorRenderer";
+
 export * from "./config/EngineConfig";
 
 export * from "./engine/Engine";
@@ -48,6 +53,10 @@ export * from "./scene/SceneContext";
 export * from "./scene/SceneNavigator";
 export * from "./scene/SceneManager";
 export * from "./scene/DiagnosticScene";
+
+export * from "./sequence/ActionSequenceCollection";
+export * from "./sequence/ActionSequenceData";
+export * from "./sequence/ActionSequenceRunner";
 
 export * from "./state/GameState";
 export * from "./state/GameStateData";

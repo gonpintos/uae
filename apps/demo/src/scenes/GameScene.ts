@@ -1,4 +1,8 @@
 import {
+    ActionSequenceCollection,
+    ActionSequenceRunner,
+    ActorCollection,
+    ActorRenderer,
     containsPoint,
     DialogueCollection,
     DialoguePanel,
@@ -13,6 +17,8 @@ import {
     RoomVisualRenderer,
     VerbInteractionCollection,
     VerbPanel,
+    type ActionSequenceData,
+    type ActorData,
     type DialogueData,
     type InteractionResult,
     type RoomData,
@@ -23,6 +29,14 @@ import {
 } from "@uae/engine";
 
 export class GameScene implements Scene {
+    private readonly actors: ActorCollection;
+
+    private readonly actorRenderer = new ActorRenderer();
+
+    private readonly sequences: ActionSequenceCollection;
+
+    private sequenceRunner: ActionSequenceRunner | null = null;
+
     private readonly roomManager: RoomManager;
 
     private readonly interactions: VerbInteractionCollection;
@@ -51,19 +65,25 @@ export class GameScene implements Scene {
 
     private selectedVerb: VerbId = "look";
 
+    private sceneEnded = false;
+
     private unsubscribePointerDown: (() => void) | null = null;
 
     public constructor(
         roomsData: RoomData[],
         initialRoomId: string,
         dialoguesData: readonly DialogueData[],
-        interactionsData: readonly VerbInteractionData[]
+        interactionsData: readonly VerbInteractionData[],
+        actorsData: readonly ActorData[],
+        sequencesData: readonly ActionSequenceData[]
     ) {
         const rooms = new RoomCollection(roomsData);
 
         this.roomManager = new RoomManager(rooms, initialRoomId);
         this.dialogues = new DialogueCollection(dialoguesData);
         this.interactions = new VerbInteractionCollection(interactionsData);
+        this.actors = new ActorCollection(actorsData);
+        this.sequences = new ActionSequenceCollection(sequencesData);
     }
 
     public enter(context: SceneContext): void {
@@ -78,11 +98,36 @@ export class GameScene implements Scene {
             context.state,
             context.inventory
         );
+        this.sceneEnded = false;
+        this.sequenceRunner = new ActionSequenceRunner(
+            this.sequences,
+            this.actors,
+            {
+                onActorMoved: () => {
+                    this.drawScreen(context);
+                },
+                onSay: (actor, message) => {
+                    this.message = `${actor.name}: «${message}»`;
+                    this.drawScreen(context);
+                },
+                onEndScene: () => {
+                    this.sceneEnded = true;
+                    this.drawScreen(context);
+                }
+            }
+        );
 
         this.drawScreen(context);
 
         this.unsubscribePointerDown =
             context.input.onPointerDown((logicalPosition) => {
+                if (
+                    this.sceneEnded ||
+                    this.getSequenceRunner().isRunning
+                ) {
+                    return;
+                }
+
                 const dialogueSession = this.getDialogueSession();
                 const dialogueView = dialogueSession.view;
 
@@ -137,7 +182,7 @@ export class GameScene implements Scene {
                         inventoryItemId
                     );
 
-                    this.applyInteractionResult(result);
+                    this.applyInteractionResult(result, context);
                     this.drawScreen(context);
                     return;
                 }
@@ -162,7 +207,7 @@ export class GameScene implements Scene {
                     hotspot.id
                 );
 
-                this.applyInteractionResult(result);
+                this.applyInteractionResult(result, context);
                 this.drawScreen(context);
             });
     }
@@ -172,6 +217,8 @@ export class GameScene implements Scene {
         this.unsubscribePointerDown = null;
         this.dialogueSession = null;
         this.interactionExecutor = null;
+        this.sequenceRunner?.cancel();
+        this.sequenceRunner = null;
 
         context.renderer.clear();
     }
@@ -199,6 +246,11 @@ export class GameScene implements Scene {
 
         this.roomVisualRenderer.draw(context.renderer, this.roomManager.currentRoom, context.assets);
 
+        this.actorRenderer.draw(
+            context.renderer,
+            this.actors
+        );
+
         if (
             context.config.debug.enabled &&
             context.config.debug.showHotspots
@@ -215,15 +267,20 @@ export class GameScene implements Scene {
             this.message
         );
 
-        this.inventoryPanel.draw(
-            context.renderer,
-            context.inventory.items
-        );
+        if (
+            !this.sceneEnded &&
+            !this.getSequenceRunner().isRunning
+        ) {
+            this.inventoryPanel.draw(
+                context.renderer,
+                context.inventory.items
+            );
 
-        this.verbPanel.draw(
-            context.renderer,
-            this.selectedVerb
-        );
+            this.verbPanel.draw(
+                context.renderer,
+                this.selectedVerb
+            );
+        }
 
         const dialogueView = this.getDialogueSession().view;
 
@@ -238,14 +295,33 @@ export class GameScene implements Scene {
     }
 
     private applyInteractionResult(
-        result: InteractionResult
+        result: InteractionResult,
+        context: SceneContext
     ): void {
         if (result.type === "startDialogue") {
             this.getDialogueSession().start(result.dialogueId);
             return;
         }
 
+        if (result.type === "triggerAction") {
+            void this.runSequence(result.actionId, context);
+            return;
+        }
+
         this.message = result.message;
+    }
+
+    private async runSequence(
+        sequenceId: string,
+        context: SceneContext
+    ): Promise<void> {
+        try {
+            await this.getSequenceRunner().run(sequenceId);
+        } catch (error: unknown) {
+            console.error("Action sequence failed.", error);
+            this.message = `Sequence failed: ${sequenceId}`;
+            this.drawScreen(context);
+        }
     }
 
     private getDialogueSession(): DialogueSession {
@@ -262,6 +338,14 @@ export class GameScene implements Scene {
         }
 
         return this.interactionExecutor;
+    }
+
+    private getSequenceRunner(): ActionSequenceRunner {
+        if (!this.sequenceRunner) {
+            throw new Error("GameScene must be entered before using sequences.");
+        }
+
+        return this.sequenceRunner;
     }
 
 }

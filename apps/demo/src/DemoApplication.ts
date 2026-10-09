@@ -5,10 +5,12 @@ import {
 } from "@uae/engine";
 
 import { demoAssets } from "./assets/demoAssets";
+import { demoActorsData } from "./data/demoActorsData";
 import { demoDialoguesData } from "./data/demoDialoguesData";
 import { demoItemsData } from "./data/demoItemsData";
 import { demoInteractionsData } from "./data/demoInteractionsData";
 import { demoRoomsData } from "./data/demoRoomsData";
+import { demoSequencesData } from "./data/demoSequencesData";
 import { GameScene } from "./scenes/GameScene";
 
 export class DemoApplication {
@@ -30,7 +32,9 @@ export class DemoApplication {
                     demoRoomsData,
                     "demo-room",
                     demoDialoguesData,
-                    demoInteractionsData
+                    demoInteractionsData,
+                    demoActorsData,
+                    demoSequencesData
                 )
             ),
             assets: demoAssets,
