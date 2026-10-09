@@ -1,3 +1,4 @@
+import { RenderLayer } from "../graphics/RenderLayer";
 import type { Renderer } from "../graphics/Renderer";
 import type { Rectangle } from "../interaction/Rectangle";
 
@@ -6,6 +7,7 @@ export interface MessageBoxOptions {
     backgroundColor?: string;
     textColor?: string;
     fontSize?: number;
+    layer?: number;
 }
 
 export class MessageBox {
@@ -16,6 +18,8 @@ export class MessageBox {
     private readonly textColor: string;
 
     private readonly fontSize: number;
+
+    private readonly layer: number;
 
     public constructor(options: MessageBoxOptions = {}) {
         this.padding = options.padding ?? 20;
@@ -28,6 +32,9 @@ export class MessageBox {
 
         this.fontSize =
             options.fontSize ?? 18;
+
+        this.layer =
+            options.layer ?? RenderLayer.Interface;
     }
 
     public draw(
@@ -38,7 +45,8 @@ export class MessageBox {
         renderer.drawRectangle({
             ...bounds,
             color: this.backgroundColor,
-            alpha: 1
+            alpha: 1,
+            layer: this.layer
         });
 
         renderer.drawText({
@@ -46,7 +54,8 @@ export class MessageBox {
             x: bounds.x + this.padding,
             y: bounds.y + this.padding,
             fontSize: this.fontSize,
-            color: this.textColor
+            color: this.textColor,
+            layer: this.layer + 1
         });
     }
 }

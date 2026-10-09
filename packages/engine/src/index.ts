@@ -1,6 +1,7 @@
 export * from "./assets/AssetCatalog";
 
 export * from "./actor/Actor";
+export * from "./actor/ActorAssetCollector";
 export * from "./actor/ActorCollection";
 export * from "./actor/ActorData";
 export * from "./actor/ActorRenderer";
@@ -23,6 +24,7 @@ export * from "./input/InputManager";
 export * from "./input/BrowserInputManager";
 
 export * from "./inventory/Inventory";
+export * from "./inventory/InventoryAssetCollector";
 export * from "./inventory/InventoryItemCatalog";
 export * from "./inventory/InventoryItemData";
 

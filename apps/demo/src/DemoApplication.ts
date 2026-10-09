@@ -1,6 +1,8 @@
 import {
+    ActorAssetCollector,
     DiagnosticScene,
     Engine,
+    InventoryAssetCollector,
     RoomAssetCollector
 } from "@uae/engine";
 
@@ -22,8 +24,14 @@ export class DemoApplication {
 
     public async run(container: HTMLElement): Promise<void> {
         const roomAssetCollector = new RoomAssetCollector();
+        const actorAssetCollector = new ActorAssetCollector();
+        const inventoryAssetCollector = new InventoryAssetCollector();
 
-        const requiredAssetIds = roomAssetCollector.collect(demoRoomsData);
+        const requiredAssetIds = [
+            ...roomAssetCollector.collect(demoRoomsData),
+            ...actorAssetCollector.collect(demoActorsData),
+            ...inventoryAssetCollector.collect(demoItemsData)
+        ];
     
         await this.engine.start({
             container,

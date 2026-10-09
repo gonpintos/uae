@@ -1,3 +1,4 @@
+import type { AssetCatalog } from "../assets/AssetCatalog";
 import { RenderLayer } from "../graphics/RenderLayer";
 import type { Renderer } from "../graphics/Renderer";
 import type { PointerPosition } from "../input/InputManager";
@@ -33,13 +34,14 @@ export class InventoryPanel {
     public constructor(options: InventoryPanelOptions = {}) {
         this.width = options.width ?? 250;
         this.padding = options.padding ?? 16;
-        this.itemHeight = options.itemHeight ?? 28;
+        this.itemHeight = options.itemHeight ?? 68;
         this.layer = options.layer ?? RenderLayer.Interface;
     }
 
     public draw(
         renderer: Renderer,
-        items: readonly InventoryItemData[]
+        items: readonly InventoryItemData[],
+        assets?: AssetCatalog
     ): void {
         const bounds = this.getBounds(renderer, items.length);
 
@@ -97,10 +99,28 @@ export class InventoryPanel {
                 layer: this.layer + 1
             });
 
+            let textX = itemBounds.x + 6;
+
+            if (item.icon && assets) {
+                const iconY = itemBounds.y +
+                    (itemBounds.height - item.icon.height) / 2;
+
+                renderer.drawImage({
+                    source: assets.getSource(item.icon.assetId),
+                    x: itemBounds.x + 8,
+                    y: iconY,
+                    width: item.icon.width,
+                    height: item.icon.height,
+                    layer: this.layer + 2
+                });
+
+                textX += item.icon.width + 12;
+            }
+
             renderer.drawText({
-                text: `• ${item.name}`,
-                x: itemBounds.x + 6,
-                y: itemBounds.y + 4,
+                text: item.icon && assets ? item.name : `• ${item.name}`,
+                x: textX,
+                y: itemBounds.y + (itemBounds.height - 16) / 2,
                 fontSize: 16,
                 color: "#ffffff",
                 layer: this.layer + 2

@@ -248,7 +248,8 @@ export class GameScene implements Scene {
 
         this.actorRenderer.draw(
             context.renderer,
-            this.actors
+            this.actors,
+            context.assets
         );
 
         if (
@@ -273,7 +274,8 @@ export class GameScene implements Scene {
         ) {
             this.inventoryPanel.draw(
                 context.renderer,
-                context.inventory.items
+                context.inventory.items,
+                context.assets
             );
 
             this.verbPanel.draw(

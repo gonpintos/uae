@@ -169,10 +169,18 @@ export class PixiRenderer implements Renderer {
 
         const sprite = new Sprite(texture);
 
-        sprite.position.set(options.x,options.y);
-
         sprite.width = options.width;
         sprite.height = options.height;
+
+        if (options.flipHorizontal) {
+            sprite.position.set(
+                options.x + options.width,
+                options.y
+            );
+            sprite.scale.x *= -1;
+        } else {
+            sprite.position.set(options.x, options.y);
+        }
 
         sprite.alpha = options.alpha ?? 1;
         

@@ -5,67 +5,44 @@ export const demoRoomData: RoomData = {
     name: "Demo Room",
     visuals: [
         {
-            id: "floor-visual",
-
+            id: "copenhagen-street-background",
             x: 0,
-            y: 400,
-
+            y: 0,
             width: 1280,
-            height: 210,
-
-            color: "#202830",
-
+            height: 720,
+            imageAssetId: "copenhagen-street",
             layer: RenderLayer.RoomBackground
         },
         {
             id: "sunglasses-stand-visual",
-            x: 80,
-            y: 260,
-            width: 120,
-            height: 180,
-            color: "#8a6931",
-            label: "Anteojos"
-        },
-        {
-            id: "fede-visual",
-            x: 760,
-            y: 210,
-            width: 120,
-            height: 250,
-            color: "#315d8a",
-            label: "Fede"
-        },
-        {
-            id: "gon-visual",
-            x: 960,
-            y: 210,
-            width: 120,
-            height: 250,
-            color: "#7a3f69",
-            label: "Gon"
+            x: 40,
+            y: 346,
+            width: 440,
+            height: 264,
+            imageAssetId: "sunglasses-stand"
         }
-    ],    
+    ],
     hotspots: [
         {
             id: "sunglasses-stand",
-            x: 80,
-            y: 260,
-            width: 120,
-            height: 180
+            x: 40,
+            y: 346,
+            width: 440,
+            height: 264
         },
         {
             id: "fede",
-            x: 760,
-            y: 210,
-            width: 120,
-            height: 250
+            x: 800,
+            y: 338,
+            width: 150,
+            height: 272
         },
         {
             id: "gon",
-            x: 960,
-            y: 210,
-            width: 120,
-            height: 250
+            x: 1000,
+            y: 338,
+            width: 150,
+            height: 272
         }
     ]
 };

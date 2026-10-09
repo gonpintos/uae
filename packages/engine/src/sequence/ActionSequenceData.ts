@@ -14,6 +14,7 @@ export interface MoveToSequenceAction {
     actorId: string;
     x: number;
     y: number;
+    durationMs?: number;
 }
 
 export interface MoveByStepsSequenceAction {

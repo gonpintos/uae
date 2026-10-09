@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "sceneId": "los-anteojos-de-franco",
+  "presentation": {
+    "width": 1280,
+    "height": 720
+  },
+  "filter": "nearest",
+  "assets": [
+    {
+      "id": "copenhagen-street",
+      "file": "copenhagen-street.png",
+      "width": 1280,
+      "height": 720,
+      "transparent": false
+    },
+    {
+      "id": "sunglasses-stand",
+      "file": "sunglasses-stand.png",
+      "width": 440,
+      "height": 264,
+      "transparent": true
+    },
+    {
+      "id": "franco",
+      "file": "franco.png",
+      "width": 192,
+      "height": 272,
+      "transparent": true
+    },
+    {
+      "id": "fede",
+      "file": "fede.png",
+      "width": 192,
+      "height": 272,
+      "transparent": true
+    },
+    {
+      "id": "gon",
+      "file": "gon.png",
+      "width": 192,
+      "height": 272,
+      "transparent": true
+    },
+    {
+      "id": "calculator",
+      "file": "calculator.png",
+      "width": 64,
+      "height": 96,
+      "transparent": true
+    },
+    {
+      "id": "franco-walk",
+      "file": "franco-walk.png",
+      "width": 768,
+      "height": 272,
+      "transparent": true
+    }
+  ],
+  "animations": {
+    "franco-walk-right": {
+      "asset": "franco-walk",
+      "frameWidth": 192,
+      "frameHeight": 272,
+      "frames": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "frameDurationMs": 180,
+      "loop": true
+    },
+    "franco-walk-left": {
+      "sameAs": "franco-walk-right",
+      "flipX": true
+    }
+  },
+  "actorAnchorPx": {
+    "x": 96,
+    "y": 264
+  }
+}

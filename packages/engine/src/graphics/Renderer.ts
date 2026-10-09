@@ -44,6 +44,8 @@ export interface ImageOptions {
 
     alpha?: number;
 
+    flipHorizontal?: boolean;
+
     layer?: number;
 }
 

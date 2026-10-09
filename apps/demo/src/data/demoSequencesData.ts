@@ -7,8 +7,9 @@ export const demoSequencesData: readonly ActionSequenceData[] = [
             {
                 type: "moveTo",
                 actorId: "franco",
-                x: 210,
-                y: 280
+                x: 440,
+                y: 338,
+                durationMs: 720
             },
             {
                 type: "wait",
