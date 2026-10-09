@@ -1,13 +1,12 @@
 import type { DialogueCollection } from "./DialogueCollection";
 import type {
-    DialogueCondition,
     DialogueData,
-    DialogueEffect,
     DialogueOptionData,
     DialogueSpeakerData
 } from "./DialogueData";
 import type { GameState } from "../state/GameState";
 import type { Inventory } from "../inventory/Inventory";
+import { GameRuleEvaluator } from "../rules/GameRuleEvaluator";
 
 export interface DialogueTurn {
     playerLine: string;
@@ -31,9 +30,7 @@ export interface DialogueSelectionResult {
 export class DialogueSession {
     private readonly dialogues: DialogueCollection;
 
-    private readonly state: GameState;
-
-    private readonly inventory: Inventory;
+    private readonly rules: GameRuleEvaluator;
 
     private activeDialogue: DialogueData | null = null;
 
@@ -45,8 +42,7 @@ export class DialogueSession {
         inventory: Inventory
     ) {
         this.dialogues = dialogues;
-        this.state = state;
-        this.inventory = inventory;
+        this.rules = new GameRuleEvaluator(state, inventory);
     }
 
     public get isActive(): boolean {
@@ -93,9 +89,7 @@ export class DialogueSession {
             playerClosingLine: option.playerClosingLine ?? null
         };
 
-        for (const effect of option.effects ?? []) {
-            this.applyEffect(effect);
-        }
+        this.rules.applyAll(option.effects ?? []);
 
         if (option.endsConversation) {
             this.activeDialogue = null;
@@ -119,31 +113,7 @@ export class DialogueSession {
         dialogue: DialogueData
     ): readonly DialogueOptionData[] {
         return dialogue.options.filter((option) =>
-            (option.conditions ?? []).every(
-                (condition) => this.matchesCondition(condition)
-            )
+            this.rules.matchesAll(option.conditions ?? [])
         );
-    }
-
-    private matchesCondition(condition: DialogueCondition): boolean {
-        switch (condition.type) {
-            case "state":
-                return this.state.matches(condition);
-
-            case "hasItem":
-                return this.inventory.has(condition.itemId) === condition.value;
-        }
-    }
-
-    private applyEffect(effect: DialogueEffect): void {
-        switch (effect.type) {
-            case "setState":
-                this.state.apply(effect);
-                break;
-
-            case "giveItem":
-                this.inventory.add(effect.itemId);
-                break;
-        }
     }
 }

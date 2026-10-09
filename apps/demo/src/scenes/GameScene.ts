@@ -11,17 +11,23 @@ import {
     RoomCollection,
     RoomManager,
     RoomVisualRenderer,
+    VerbInteractionCollection,
+    VerbPanel,
     type DialogueData,
     type InteractionResult,
     type RoomData,
     type Scene,
-    type SceneContext
+    type SceneContext,
+    type VerbId,
+    type VerbInteractionData
 } from "@uae/engine";
 
 export class GameScene implements Scene {
     private readonly roomManager: RoomManager;
 
-    private readonly interactionExecutor: InteractionExecutor;
+    private readonly interactions: VerbInteractionCollection;
+
+    private interactionExecutor: InteractionExecutor | null = null;
 
     private readonly dialogues: DialogueCollection;
 
@@ -33,6 +39,8 @@ export class GameScene implements Scene {
 
     private readonly inventoryPanel = new InventoryPanel();
 
+    private readonly verbPanel = new VerbPanel();
+
     private readonly layout = new GameLayout({messageBoxHeight: 110});
 
     private readonly roomVisualRenderer = new RoomVisualRenderer();
@@ -41,23 +49,32 @@ export class GameScene implements Scene {
 
     private message = "Click an interactive area";
 
+    private selectedVerb: VerbId = "look";
+
     private unsubscribePointerDown: (() => void) | null = null;
 
     public constructor(
         roomsData: RoomData[],
         initialRoomId: string,
-        dialoguesData: readonly DialogueData[]
+        dialoguesData: readonly DialogueData[],
+        interactionsData: readonly VerbInteractionData[]
     ) {
         const rooms = new RoomCollection(roomsData);
 
         this.roomManager = new RoomManager(rooms, initialRoomId);
-        this.interactionExecutor = new InteractionExecutor(this.roomManager);
         this.dialogues = new DialogueCollection(dialoguesData);
+        this.interactions = new VerbInteractionCollection(interactionsData);
     }
 
     public enter(context: SceneContext): void {
         this.dialogueSession = new DialogueSession(
             this.dialogues,
+            context.state,
+            context.inventory
+        );
+        this.interactionExecutor = new InteractionExecutor(
+            this.roomManager,
+            this.interactions,
             context.state,
             context.inventory
         );
@@ -100,6 +117,31 @@ export class GameScene implements Scene {
                     return;
                 }
 
+                const selectedVerb = this.verbPanel.findVerbAt(
+                    logicalPosition
+                );
+
+                if (selectedVerb) {
+                    this.selectedVerb = selectedVerb;
+                    this.drawScreen(context);
+                    return;
+                }
+
+                const inventoryItemId = this.inventoryPanel.findItemAt(
+                    logicalPosition
+                );
+
+                if (inventoryItemId) {
+                    const result = this.getInteractionExecutor().execute(
+                        this.selectedVerb,
+                        inventoryItemId
+                    );
+
+                    this.applyInteractionResult(result);
+                    this.drawScreen(context);
+                    return;
+                }
+
                 const gameViewport = this.layout.getGameViewport(context.renderer);
 
                 if (!containsPoint(gameViewport, logicalPosition)) {
@@ -115,14 +157,10 @@ export class GameScene implements Scene {
                     return;
                 }
 
-                if (!hotspot.interaction) {
-                    this.message = `You clicked: ${hotspot.id}`;
-
-                    this.drawScreen(context);
-                    return;
-                }
-
-                const result = this.interactionExecutor.execute(hotspot.interaction);
+                const result = this.getInteractionExecutor().execute(
+                    this.selectedVerb,
+                    hotspot.id
+                );
 
                 this.applyInteractionResult(result);
                 this.drawScreen(context);
@@ -133,6 +171,7 @@ export class GameScene implements Scene {
         this.unsubscribePointerDown?.();
         this.unsubscribePointerDown = null;
         this.dialogueSession = null;
+        this.interactionExecutor = null;
 
         context.renderer.clear();
     }
@@ -181,6 +220,11 @@ export class GameScene implements Scene {
             context.inventory.items
         );
 
+        this.verbPanel.draw(
+            context.renderer,
+            this.selectedVerb
+        );
+
         const dialogueView = this.getDialogueSession().view;
 
         if (dialogueView) {
@@ -210,6 +254,14 @@ export class GameScene implements Scene {
         }
 
         return this.dialogueSession;
+    }
+
+    private getInteractionExecutor(): InteractionExecutor {
+        if (!this.interactionExecutor) {
+            throw new Error("GameScene must be entered before using interactions.");
+        }
+
+        return this.interactionExecutor;
     }
 
 }

@@ -1,3 +1,5 @@
+import type { VerbId } from "../verb/VerbData";
+
 export interface MessageInteractionResult {
     type: "message";
     message: string;
@@ -18,8 +20,24 @@ export interface StartDialogueInteractionResult {
     dialogueId: string;
 }
 
+export interface TriggerActionInteractionResult {
+    type: "triggerAction";
+    actionId: string;
+    message: string;
+}
+
+export interface UnhandledInteractionResult {
+    type: "unhandled";
+    verb: VerbId;
+    targetId: string;
+    message: string;
+}
+
 export type InteractionResult =
     | MessageInteractionResult
     | ChangeRoomInteractionResult
     | GoBackInteractionResult
-    | StartDialogueInteractionResult;
+    | StartDialogueInteractionResult
+    | TriggerActionInteractionResult
+    | UnhandledInteractionResult;
+

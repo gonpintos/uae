@@ -7,6 +7,7 @@ import {
 import { demoAssets } from "./assets/demoAssets";
 import { demoDialoguesData } from "./data/demoDialoguesData";
 import { demoItemsData } from "./data/demoItemsData";
+import { demoInteractionsData } from "./data/demoInteractionsData";
 import { demoRoomsData } from "./data/demoRoomsData";
 import { GameScene } from "./scenes/GameScene";
 
@@ -28,7 +29,8 @@ export class DemoApplication {
                 () => new GameScene(
                     demoRoomsData,
                     "demo-room",
-                    demoDialoguesData
+                    demoDialoguesData,
+                    demoInteractionsData
                 )
             ),
             assets: demoAssets,

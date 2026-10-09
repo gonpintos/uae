@@ -26,6 +26,9 @@ export * from "./interaction/Hotspot";
 export * from "./interaction/HotspotCollection";
 export * from "./interaction/InteractionResult";
 export * from "./interaction/InteractionExecutor";
+export * from "./interaction/InteractionAction";
+export * from "./interaction/VerbInteractionCollection";
+export * from "./interaction/VerbInteractionData";
 
 export * from "./math/Point";
 
@@ -36,6 +39,9 @@ export * from "./room/RoomCollection";
 export * from "./room/RoomManager";
 export * from "./room/RoomVisualData";
 export * from "./room/RoomVisualRenderer";
+
+export * from "./rules/GameRuleData";
+export * from "./rules/GameRuleEvaluator";
 
 export * from "./scene/Scene";
 export * from "./scene/SceneContext";
@@ -50,3 +56,6 @@ export * from "./ui/GameLayout";
 export * from "./ui/MessageBox";
 export * from "./ui/DialoguePanel";
 export * from "./ui/InventoryPanel";
+export * from "./ui/VerbPanel";
+
+export * from "./verb/VerbData";

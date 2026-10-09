@@ -1,13 +1,22 @@
 import { RenderLayer } from "../graphics/RenderLayer";
 import type { Renderer } from "../graphics/Renderer";
+import type { PointerPosition } from "../input/InputManager";
 import type { InventoryItemData } from "../inventory/InventoryItemData";
-import type { Rectangle } from "../interaction/Rectangle";
+import {
+    containsPoint,
+    type Rectangle
+} from "../interaction/Rectangle";
 
 export interface InventoryPanelOptions {
     width?: number;
     padding?: number;
     itemHeight?: number;
     layer?: number;
+}
+
+interface InventoryItemBounds {
+    itemId: string;
+    bounds: Rectangle;
 }
 
 export class InventoryPanel {
@@ -18,6 +27,8 @@ export class InventoryPanel {
     private readonly itemHeight: number;
 
     private readonly layer: number;
+
+    private itemBounds: InventoryItemBounds[] = [];
 
     public constructor(options: InventoryPanelOptions = {}) {
         this.width = options.width ?? 250;
@@ -31,6 +42,8 @@ export class InventoryPanel {
         items: readonly InventoryItemData[]
     ): void {
         const bounds = this.getBounds(renderer, items.length);
+
+        this.itemBounds = [];
 
         renderer.drawRectangle({
             ...bounds,
@@ -51,20 +64,56 @@ export class InventoryPanel {
             layer: this.layer + 1
         });
 
-        const visibleItems = items.length > 0
-            ? items.map((item) => item.name)
-            : ["(vacío)"];
-
-        for (const [index, itemName] of visibleItems.entries()) {
+        if (items.length === 0) {
             renderer.drawText({
-                text: `• ${itemName}`,
+                text: "(vacío)",
                 x: bounds.x + this.padding,
-                y: bounds.y + 44 + index * this.itemHeight,
+                y: bounds.y + 44,
                 fontSize: 16,
                 color: "#ffffff",
                 layer: this.layer + 1
             });
+
+            return;
         }
+
+        for (const [index, item] of items.entries()) {
+            const itemBounds: Rectangle = {
+                x: bounds.x + this.padding,
+                y: bounds.y + 40 + index * this.itemHeight,
+                width: bounds.width - this.padding * 2,
+                height: this.itemHeight - 4
+            };
+
+            this.itemBounds.push({
+                itemId: item.id,
+                bounds: itemBounds
+            });
+
+            renderer.drawRectangle({
+                ...itemBounds,
+                color: "#29382e",
+                alpha: 1,
+                layer: this.layer + 1
+            });
+
+            renderer.drawText({
+                text: `• ${item.name}`,
+                x: itemBounds.x + 6,
+                y: itemBounds.y + 4,
+                fontSize: 16,
+                color: "#ffffff",
+                layer: this.layer + 2
+            });
+        }
+    }
+
+    public findItemAt(position: PointerPosition): string | null {
+        const match = this.itemBounds.find(
+            (entry) => containsPoint(entry.bounds, position)
+        );
+
+        return match?.itemId ?? null;
     }
 
     private getBounds(

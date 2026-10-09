@@ -38,7 +38,7 @@ export class DialoguePanel {
         this.padding = options.padding ?? 20;
         this.optionHeight = options.optionHeight ?? 38;
         this.optionGap = options.optionGap ?? 8;
-        this.layer = options.layer ?? RenderLayer.Interface;
+        this.layer = options.layer ?? RenderLayer.Modal;
     }
 
     public getBounds(renderer: Renderer): Rectangle {
@@ -62,7 +62,7 @@ export class DialoguePanel {
         renderer.drawRectangle({
             ...bounds,
             color: "#17131f",
-            alpha: 0.98,
+            alpha: 1,
             strokeColor: "#9d83c7",
             strokeWidth: 2,
             layer: this.layer

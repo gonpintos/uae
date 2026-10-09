@@ -70,7 +70,19 @@ export const demoDialoguesData: readonly DialogueData[] = [
                 id: "ask-exchange-rate",
                 playerLine: "¿Cuál es la cotización de la corona danesa?",
                 npcLine: "1 dólar está 7,43 coronas danesas.",
-                endsConversation: true
+                endsConversation: true,
+                effects: [
+                    {
+                        type: "setState",
+                        key: "exchange-rate-known",
+                        value: true
+                    },
+                    {
+                        type: "setState",
+                        key: "dkk-per-usd",
+                        value: 7.43
+                    }
+                ]
             },
             {
                 id: "hello-hello",

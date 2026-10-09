@@ -91,8 +91,8 @@ assert(
 panel.draw(renderer, panel.getBounds(renderer), initialFedeView);
 
 assert(
-    drawnLayers.every((layer) => layer >= RenderLayer.Interface),
-    "Dialogue UI should render above room layers."
+    drawnLayers.every((layer) => layer >= RenderLayer.Modal),
+    "Dialogue UI should render entirely on the modal layer."
 );
 
 const clickedFedeOption = panel.findOptionAt({

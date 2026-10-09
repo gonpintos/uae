@@ -1,27 +1,16 @@
 import type {
-    StateCondition,
-    StateEffect
-} from "../state/GameStateData";
+    GameCondition,
+    GameEffect
+} from "../rules/GameRuleData";
 
 export interface DialogueSpeakerData {
     id: string;
     name: string;
 }
 
-export interface HasItemCondition {
-    type: "hasItem";
-    itemId: string;
-    value: boolean;
-}
+export type DialogueCondition = GameCondition;
 
-export interface GiveItemEffect {
-    type: "giveItem";
-    itemId: string;
-}
-
-export type DialogueCondition = StateCondition | HasItemCondition;
-
-export type DialogueEffect = StateEffect | GiveItemEffect;
+export type DialogueEffect = GameEffect;
 
 export interface DialogueOptionData {
     id: string;

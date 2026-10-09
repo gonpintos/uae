@@ -5,24 +5,6 @@ export const demoRoomData: RoomData = {
     name: "Demo Room",
     visuals: [
         {
-            id: "window-visual",
-            x: 250,
-            y: 180,
-            width: 150,
-            height: 180,
-            color: "#294c60",
-            label: "Window"
-        },
-        {
-            id: "door-visual",
-            x: 500,
-            y: 180,
-            width: 160,
-            height: 300,
-            color: "#5c4033",
-            label: "Door"
-        },
-        {
             id: "floor-visual",
 
             x: 0,
@@ -34,6 +16,15 @@ export const demoRoomData: RoomData = {
             color: "#202830",
 
             layer: RenderLayer.RoomBackground
+        },
+        {
+            id: "sunglasses-stand-visual",
+            x: 80,
+            y: 260,
+            width: 120,
+            height: 180,
+            color: "#8a6931",
+            label: "Anteojos"
         },
         {
             id: "fede-visual",
@@ -56,48 +47,25 @@ export const demoRoomData: RoomData = {
     ],    
     hotspots: [
         {
-            id: "window",
-            x: 250,
-            y: 180,
-            width: 150,
-            height: 180,
-            interaction: {
-                type: "message",
-                message: "It is raining outside."
-            }
-        },
-        {
-            id: "door",
-            x: 500,
-            y: 180,
-            width: 160,
-            height: 300,
-            interaction: {
-                type: "changeRoom",
-                roomId: "hallway"
-            }
+            id: "sunglasses-stand",
+            x: 80,
+            y: 260,
+            width: 120,
+            height: 180
         },
         {
             id: "fede",
             x: 760,
             y: 210,
             width: 120,
-            height: 250,
-            interaction: {
-                type: "startDialogue",
-                dialogueId: "fede-sunglasses"
-            }
+            height: 250
         },
         {
             id: "gon",
             x: 960,
             y: 210,
             width: 120,
-            height: 250,
-            interaction: {
-                type: "startDialogue",
-                dialogueId: "gon-sunglasses"
-            }
+            height: 250
         }
     ]
 };

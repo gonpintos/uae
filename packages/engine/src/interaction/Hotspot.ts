@@ -3,31 +3,9 @@ import {
     containsPoint,
     type Rectangle
 } from "./Rectangle";
+import type { InteractionAction } from "./InteractionAction";
 
-export interface MessageInteraction {
-    type: "message";
-    message: string;
-}
-
-export interface ChangeRoomInteraction {
-    type: "changeRoom";
-    roomId: string;
-}
-
-export interface GoBackInteraction {
-    type: "goBack";
-}
-
-export interface StartDialogueInteraction {
-    type: "startDialogue";
-    dialogueId: string;
-}
-
-export type HotspotInteraction =
-    | MessageInteraction
-    | ChangeRoomInteraction
-    | GoBackInteraction
-    | StartDialogueInteraction;
+export type HotspotInteraction = InteractionAction;
 
 export interface HotspotOptions extends Rectangle {
     id: string;
