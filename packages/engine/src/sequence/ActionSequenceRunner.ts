@@ -9,11 +9,18 @@ import type { ActionSequenceStep } from "./ActionSequenceData";
 
 export type SequenceDelay = MovementDelay;
 
+export interface ActionSequenceCompletion {
+    endedScene: boolean;
+    cancelled: boolean;
+}
+
 export interface ActionSequenceCallbacks {
     onActorMoved(actor: Actor): void;
     onSay(actor: Actor, message: string): void | Promise<void>;
     onShowTitle(text: string): void;
     onEndScene(): void;
+    onStarted?(): void;
+    onFinished?(completion: ActionSequenceCompletion): void;
 }
 
 const browserDelay: SequenceDelay = (durationMs) =>
@@ -35,6 +42,8 @@ export class ActionSequenceRunner {
     private running = false;
 
     private cancelled = false;
+
+    private endedScene = false;
 
     public constructor(
         sequences: ActionSequenceCollection,
@@ -67,8 +76,11 @@ export class ActionSequenceRunner {
 
         this.running = true;
         this.cancelled = false;
+        this.endedScene = false;
 
         try {
+            this.callbacks.onStarted?.();
+
             for (const action of sequence.actions) {
                 if (this.cancelled) {
                     return;
@@ -82,6 +94,10 @@ export class ActionSequenceRunner {
             }
         } finally {
             this.running = false;
+            this.callbacks.onFinished?.({
+                endedScene: this.endedScene,
+                cancelled: this.cancelled
+            });
         }
     }
 
@@ -131,6 +147,7 @@ export class ActionSequenceRunner {
                 return true;
 
             case "endScene":
+                this.endedScene = true;
                 this.callbacks.onEndScene();
                 return false;
         }

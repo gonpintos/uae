@@ -28,6 +28,14 @@ Antes de comenzar la escena jugable se reproducen estas pantallas:
 
 Después comienza automáticamente la escena jugable.
 
+Al mostrarse la escena, la interfaz permanece visible pero bloqueada y Franco
+dice:
+
+> «¡Necesito comprarme anteojos de sol!»
+
+Cuando termina la frase, se habilita el control del jugador con **Ir a** como
+verbo seleccionado.
+
 ## Situación
 
 Franco, Fede y Gon pasean por una calle de Copenhague.

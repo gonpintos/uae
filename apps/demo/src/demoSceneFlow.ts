@@ -16,7 +16,8 @@ export function createDemoGameScene(): GameScene {
         demoInteractionsData,
         demoActorsData,
         demoSequencesData,
-        "franco"
+        "franco",
+        "opening-sunglasses"
     );
 }
 

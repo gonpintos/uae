@@ -77,7 +77,7 @@ assert(
     "Hovering Fede should build the action line from verb and target data"
 );
 assert(
-    images.some((entry) => entry.source === "/assets/inventory/calculator.png"),
+    images.some((entry) => entry.source === "./assets/inventory/calculator.png"),
     "The fixed inventory should keep the calculator image"
 );
 
@@ -93,6 +93,76 @@ assert(
 );
 
 texts.length = 0;
+rectangles.length = 0;
+images.length = 0;
+ui.draw(
+    renderer,
+    interfaceBounds,
+    {
+        selectedVerb: "goTo",
+        targetName: null,
+        items: inventory.items,
+        visible: true,
+        interactive: false
+    },
+    new AssetCatalog(demoAssets)
+);
+
+assert(ui.isVisible, "Cinematic UI should remain visible");
+assert(!ui.isInteractive, "Cinematic UI should be marked as disabled");
+assert(
+    texts.some((entry) => entry.text === "Ir a") &&
+        texts.some((entry) => entry.text === "Calculadora"),
+    "Disabled UI should still render verbs and inventory items"
+);
+assert(
+    images.some((entry) => entry.source === "./assets/inventory/calculator.png"),
+    "Disabled UI should keep the inventory image visible"
+);
+assert(
+    rectangles.some(
+        (entry) =>
+            entry.x === interfaceBounds.x &&
+            entry.y === interfaceBounds.y &&
+            entry.width === interfaceBounds.width &&
+            entry.height === interfaceBounds.height &&
+            entry.color === "#000000" &&
+            entry.alpha === 0.32 &&
+            entry.layer === RenderLayer.Interface + 4
+    ),
+    "Disabled UI should render a subtle dimming overlay"
+);
+assertEqual(
+    ui.findVerbAt({x: 400, y: 675}),
+    null,
+    "Disabled verbs should not resolve clicks"
+);
+assertEqual(
+    ui.findItemAt({x: 900, y: 675}),
+    null,
+    "Disabled inventory items should not resolve clicks"
+);
+assert(
+    ui.contains({x: 900, y: 675}),
+    "Disabled UI should still consume clicks inside its bounds"
+);
+
+let executedUIClicks = 0;
+
+if (
+    ui.findVerbAt({x: 400, y: 675}) ||
+    ui.findItemAt({x: 900, y: 675})
+) {
+    executedUIClicks += 1;
+}
+
+assertEqual(
+    executedUIClicks,
+    0,
+    "Clicks on disabled cinematic UI should not execute actions"
+);
+
+texts.length = 0;
 ui.draw(
     renderer,
     interfaceBounds,
@@ -105,6 +175,12 @@ ui.draw(
 assert(
     texts.some((entry) => entry.text === "Mirar Tienda de anteojos"),
     "Changing the hovered target should update the action line"
+);
+assert(ui.isInteractive, "A normal UI draw should restore interaction");
+assertEqual(
+    ui.findVerbAt({x: 400, y: 675}),
+    "use",
+    "Verbs should accept input again after cinematic lock ends"
 );
 
 texts.length = 0;

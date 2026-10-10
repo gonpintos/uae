@@ -5,6 +5,7 @@ import { ActorSpeechController } from "../../../packages/engine/src/speech/Actor
 import { RenderLayer } from "../../../packages/engine/src/graphics/RenderLayer";
 import type { Renderer, TextOptions } from "../../../packages/engine/src/graphics/Renderer";
 import { ScreenTitle } from "../../../packages/engine/src/ui/ScreenTitle";
+import { VerbController } from "../../../packages/engine/src/verb/VerbController";
 import { demoActorsData } from "../src/data/demoActorsData";
 import { demoSequencesData } from "../src/data/demoSequencesData";
 
@@ -225,6 +226,221 @@ async function runTest(): Promise<void> {
     assertEqual(titleDraws[0]?.anchorX, 0.5, "ScreenTitle should use a centered horizontal anchor");
     assertEqual(titleDraws[0]?.anchorY, 0.5, "ScreenTitle should use a centered vertical anchor");
     assertEqual(titleDraws[0]?.layer, RenderLayer.Modal, "ScreenTitle should render on the top UI layer");
+
+    const openingSequence = sequences.getById("opening-sunglasses");
+
+    assertEqual(
+        openingSequence.actions.length,
+        1,
+        "The opening should remain a minimal declarative sequence"
+    );
+    assertEqual(
+        openingSequence.actions[0]?.type,
+        "say",
+        "The opening line should use the existing sequence speech action"
+    );
+
+    let releaseOpeningSpeech: (() => void) | null = null;
+    let openingUIVisible = true;
+    let openingUIInteractive = true;
+    let openingClicks = 0;
+    const openingVerbs = new VerbController();
+    const openingSpeech = new ActorSpeechController(
+        actors,
+        () => undefined,
+        {},
+        () => new Promise((resolve) => {
+            releaseOpeningSpeech = resolve;
+        })
+    );
+    const openingRunner = new ActionSequenceRunner(
+        sequences,
+        actors,
+        {
+            onActorMoved: () => undefined,
+            onSay: (actor, message) =>
+                openingSpeech.say(actor.id, message),
+            onShowTitle: () => undefined,
+            onEndScene: () => undefined,
+            onStarted: () => {
+                openingUIVisible = true;
+                openingUIInteractive = false;
+            },
+            onFinished: ({endedScene}) => {
+                openingUIInteractive = !endedScene;
+                openingVerbs.completeAction();
+            }
+        }
+    );
+
+    openingVerbs.select("look");
+
+    const openingExecution = openingRunner.run("opening-sunglasses");
+
+    assert(openingRunner.isRunning, "The opening scene should start blocked");
+    assert(openingUIVisible, "The opening should keep the classic UI visible");
+    assert(
+        !openingUIInteractive,
+        "The opening should disable interaction during speech"
+    );
+    assertEqual(
+        actors.getById("franco").currentAnimation,
+        "idle",
+        "Franco should remain idle during the opening line"
+    );
+    assertEqual(
+        openingSpeech.current?.actorId,
+        "franco",
+        "Franco should be the opening speaker"
+    );
+    assertEqual(
+        openingSpeech.current?.text,
+        "¡Necesito comprarme anteojos de sol!",
+        "The opening should reproduce the declared line"
+    );
+
+    if (openingUIInteractive) {
+        openingClicks += 1;
+    }
+
+    assertEqual(
+        openingClicks,
+        0,
+        "Opening speech should block player clicks"
+    );
+
+    const finishOpeningSpeech =
+        releaseOpeningSpeech as (() => void) | null;
+
+    if (!finishOpeningSpeech) {
+        throw new Error("The opening speech should be waiting to finish.");
+    }
+
+    finishOpeningSpeech();
+    await openingExecution;
+
+    assert(
+        !openingSpeech.isSpeaking,
+        "The opening must wait for speech to finish completely"
+    );
+    assert(
+        openingUIInteractive,
+        "The UI should become interactive after the opening line"
+    );
+    assertEqual(
+        openingVerbs.selectedVerb,
+        "goTo",
+        "The opening should leave the default Go To verb selected"
+    );
+
+    const lifecycleSequences = new ActionSequenceCollection([
+        {
+            id: "non-ending-sequence",
+            actions: [
+                {
+                    type: "wait",
+                    durationMs: 25
+                }
+            ]
+        },
+        {
+            id: "ending-sequence",
+            actions: [
+                {
+                    type: "endScene"
+                }
+            ]
+        }
+    ]);
+    let releaseNormalSequence: (() => void) | null = null;
+    let uiVisible = true;
+    let uiInteractive = true;
+    let lifecycleSceneEnded = false;
+    let executedClicks = 0;
+    const completionStates: boolean[] = [];
+    const lifecycleRunner = new ActionSequenceRunner(
+        lifecycleSequences,
+        actors,
+        {
+            onActorMoved: () => undefined,
+            onSay: () => undefined,
+            onShowTitle: () => undefined,
+            onEndScene: () => {
+                lifecycleSceneEnded = true;
+                uiInteractive = false;
+            },
+            onStarted: () => {
+                uiVisible = true;
+                uiInteractive = false;
+            },
+            onFinished: ({endedScene}) => {
+                completionStates.push(endedScene);
+                uiVisible = true;
+
+                if (!endedScene && !lifecycleSceneEnded) {
+                    uiInteractive = true;
+                }
+            }
+        },
+        () => new Promise((resolve) => {
+            releaseNormalSequence = resolve;
+        })
+    );
+    const tryClick = (): void => {
+        if (uiInteractive) {
+            executedClicks += 1;
+        }
+    };
+    const normalExecution = lifecycleRunner.run("non-ending-sequence");
+
+    assert(uiVisible, "Sequence start should keep the classic UI visible");
+    assert(!uiInteractive, "Sequence start should disable UI interaction");
+    tryClick();
+    assertEqual(
+        executedClicks,
+        0,
+        "Clicks should not execute while a sequence is running"
+    );
+
+    const releaseSequence = releaseNormalSequence as (() => void) | null;
+
+    if (!releaseSequence) {
+        throw new Error("The non-ending sequence should be waiting.");
+    }
+
+    releaseSequence();
+    await normalExecution;
+
+    assert(
+        uiInteractive,
+        "A sequence without endScene should restore UI interaction"
+    );
+    tryClick();
+    assertEqual(
+        executedClicks,
+        1,
+        "Clicks should execute again after a normal sequence"
+    );
+
+    await lifecycleRunner.run("ending-sequence");
+
+    assert(lifecycleSceneEnded, "endScene should mark the scene as ended");
+    assert(uiVisible, "The UI should remain visible after endScene");
+    assert(
+        !uiInteractive,
+        "The UI should remain disabled after endScene"
+    );
+    tryClick();
+    assertEqual(
+        executedClicks,
+        1,
+        "Clicks should remain blocked after endScene"
+    );
+    assertEqual(
+        completionStates.join(","),
+        "false,true",
+        "Sequence completion should report whether endScene ran"
+    );
 
     console.log("Scripted sequence functional test passed.");
 }

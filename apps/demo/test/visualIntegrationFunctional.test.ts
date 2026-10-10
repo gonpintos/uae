@@ -48,7 +48,7 @@ actorRenderer.draw(renderer, actors, assets);
 assert(
     drawnImages.some(
         (image) =>
-            image.source === "/assets/actors/franco/idle.png" &&
+            image.source === "./assets/actors/franco/idle.png" &&
             image.flipHorizontal === false &&
             image.x === 560 &&
             image.y === 338
@@ -58,7 +58,7 @@ assert(
 assert(
     drawnImages.some(
         (image) =>
-            image.source === "/assets/actors/fede.png" &&
+            image.source === "./assets/actors/fede.png" &&
             image.flipHorizontal === true
     ),
     "ActorRenderer should draw Fede facing left"
@@ -66,7 +66,7 @@ assert(
 assert(
     drawnImages.some(
         (image) =>
-            image.source === "/assets/actors/gon.png" &&
+            image.source === "./assets/actors/gon.png" &&
             image.flipHorizontal === true
     ),
     "ActorRenderer should draw Gon facing left"
@@ -105,10 +105,10 @@ new RoomVisualRenderer().draw(renderer, room, assets);
 actorRenderer.draw(renderer, depthActors, assets);
 
 const standBehindLayer = drawnImages.find(
-    (image) => image.source === "/assets/objects/sunglasses-stand.png"
+    (image) => image.source === "./assets/objects/sunglasses-stand.png"
 )?.layer ?? 0;
 const actorBehindLayer = drawnImages.find(
-    (image) => image.source === "/assets/actors/franco/idle.png"
+    (image) => image.source === "./assets/actors/franco/idle.png"
 )?.layer ?? 0;
 
 assert(
@@ -122,10 +122,10 @@ new RoomVisualRenderer().draw(renderer, room, assets);
 actorRenderer.draw(renderer, depthActors, assets);
 
 const standFrontLayer = drawnImages.find(
-    (image) => image.source === "/assets/objects/sunglasses-stand.png"
+    (image) => image.source === "./assets/objects/sunglasses-stand.png"
 )?.layer ?? 0;
 const actorFrontLayer = drawnImages.find(
-    (image) => image.source === "/assets/actors/franco/idle.png"
+    (image) => image.source === "./assets/actors/franco/idle.png"
 )?.layer ?? 0;
 
 assert(
@@ -143,7 +143,7 @@ actorRenderer.draw(renderer, actors, assets);
 assert(
     drawnImages.some(
         (image) =>
-            image.source === "/assets/actors/franco/walk-01.png" &&
+            image.source === "./assets/actors/franco/walk-01.png" &&
             image.flipHorizontal === true
     ),
     "ActorRenderer should flip the walk frame for leftward movement"
@@ -168,7 +168,7 @@ new InventoryPanel().draw(renderer, inventory.items, assets);
 assert(
     drawnImages.some(
         (image) =>
-            image.source === "/assets/inventory/calculator.png" &&
+            image.source === "./assets/inventory/calculator.png" &&
             image.width === 32 &&
             image.height === 48
     ),

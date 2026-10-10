@@ -53,7 +53,7 @@ async function runTest(): Promise<void> {
     );
     assertEqual(
         assets.getSource("intro-presentation"),
-        "/assets/intro/intro-presentacion.png",
+        "./assets/intro/intro-presentacion.png",
         "The intro image should use the final PNG path"
     );
 
@@ -139,7 +139,7 @@ async function runTest(): Promise<void> {
     );
     assertEqual(
         drawnImages[0]?.source,
-        "/assets/intro/intro-presentacion.png",
+        "./assets/intro/intro-presentacion.png",
         "IntroScene should resolve the loaded image through AssetCatalog"
     );
 

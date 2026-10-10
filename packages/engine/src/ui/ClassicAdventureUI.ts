@@ -22,11 +22,14 @@ export interface ClassicAdventureUIView {
     targetName: string | null;
     statusMessage?: string;
     items: readonly InventoryItemData[];
+    visible?: boolean;
+    interactive?: boolean;
 }
 
 export interface ClassicAdventureUIOptions {
     verbs?: readonly VerbData[];
     layer?: number;
+    disabledOverlayAlpha?: number;
 }
 
 export class ClassicAdventureUI {
@@ -40,7 +43,13 @@ export class ClassicAdventureUI {
 
     private readonly inventoryPanel: InventoryPanel;
 
+    private readonly disabledOverlayAlpha: number;
+
     private bounds: Rectangle | null = null;
+
+    private visible = false;
+
+    private interactive = false;
 
     public constructor(options: ClassicAdventureUIOptions = {}) {
         const verbs = options.verbs ?? defaultVerbs;
@@ -50,6 +59,15 @@ export class ClassicAdventureUI {
         this.actionLine = new ActionLine({verbs, layer: this.layer + 3});
         this.verbPanel = new VerbPanel({verbs, layer: this.layer + 1});
         this.inventoryPanel = new InventoryPanel({layer: this.layer + 1});
+        this.disabledOverlayAlpha = options.disabledOverlayAlpha ?? 0.32;
+    }
+
+    public get isVisible(): boolean {
+        return this.visible;
+    }
+
+    public get isInteractive(): boolean {
+        return this.interactive;
     }
 
     public draw(
@@ -58,6 +76,15 @@ export class ClassicAdventureUI {
         view: ClassicAdventureUIView,
         assets?: AssetCatalog
     ): void {
+        this.visible = view.visible ?? true;
+        this.interactive =
+            this.visible && (view.interactive ?? true);
+
+        if (!this.visible) {
+            this.bounds = null;
+            return;
+        }
+
         this.drawBackground(renderer, bounds);
 
         const actionBounds: Rectangle = {
@@ -96,6 +123,15 @@ export class ClassicAdventureUI {
             assets,
             inventoryBounds
         );
+
+        if (!this.interactive) {
+            renderer.drawRectangle({
+                ...bounds,
+                color: "#000000",
+                alpha: this.disabledOverlayAlpha,
+                layer: this.layer + 4
+            });
+        }
     }
 
     public drawBackground(
@@ -119,10 +155,18 @@ export class ClassicAdventureUI {
     }
 
     public findVerbAt(position: PointerPosition): VerbId | null {
+        if (!this.interactive) {
+            return null;
+        }
+
         return this.verbPanel.findVerbAt(position);
     }
 
     public findItemAt(position: PointerPosition): string | null {
+        if (!this.interactive) {
+            return null;
+        }
+
         return this.inventoryPanel.findItemAt(position);
     }
 

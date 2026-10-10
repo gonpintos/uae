@@ -95,7 +95,15 @@ export class GameScene implements Scene {
 
     private sceneEnded = false;
 
+    private classicUIVisible = true;
+
+    private classicUIInteractive = true;
+
     private readonly controlledActorId: string;
+
+    private readonly initialSequenceId: string | null;
+
+    private initialSequencePlayed = false;
 
     private unsubscribePointerDown: (() => void) | null = null;
 
@@ -108,7 +116,8 @@ export class GameScene implements Scene {
         interactionsData: readonly VerbInteractionData[],
         actorsData: readonly ActorData[],
         sequencesData: readonly ActionSequenceData[],
-        controlledActorId: string
+        controlledActorId: string,
+        initialSequenceId?: string
     ) {
         const rooms = new RoomCollection(roomsData);
 
@@ -118,6 +127,7 @@ export class GameScene implements Scene {
         this.actors = new ActorCollection(actorsData);
         this.sequences = new ActionSequenceCollection(sequencesData);
         this.controlledActorId = controlledActorId;
+        this.initialSequenceId = initialSequenceId ?? null;
     }
 
     public enter(context: SceneContext): void {
@@ -133,6 +143,8 @@ export class GameScene implements Scene {
             context.inventory
         );
         this.sceneEnded = false;
+        this.classicUIVisible = true;
+        this.classicUIInteractive = true;
         this.screenTitle = null;
         this.message = "";
         this.hoveredTargetName = null;
@@ -185,6 +197,19 @@ export class GameScene implements Scene {
                 },
                 onEndScene: () => {
                     this.sceneEnded = true;
+                    this.classicUIInteractive = false;
+                    this.drawScreen(context);
+                },
+                onStarted: () => {
+                    this.classicUIVisible = true;
+                    this.classicUIInteractive = false;
+                    this.hoveredTargetName = null;
+                    this.drawScreen(context);
+                },
+                onFinished: ({endedScene}) => {
+                    this.classicUIVisible = true;
+                    this.classicUIInteractive =
+                        !endedScene && !this.sceneEnded;
                     this.drawScreen(context);
                 }
             },
@@ -197,7 +222,8 @@ export class GameScene implements Scene {
         this.unsubscribePointerMove =
             context.input.onPointerMove((logicalPosition) => {
                 this.cursorPosition = logicalPosition;
-                this.hoveredTargetName = logicalPosition
+                this.hoveredTargetName =
+                    this.classicUIInteractive && logicalPosition
                     ? this.findHoveredTargetName(logicalPosition, context)
                     : null;
                 this.drawScreen(context);
@@ -206,6 +232,7 @@ export class GameScene implements Scene {
         this.unsubscribePointerDown =
             context.input.onPointerDown((logicalPosition) => {
                 if (
+                    !this.classicUIInteractive ||
                     this.sceneEnded ||
                     this.getSequenceRunner().isRunning ||
                     this.getNavigationController().isNavigating ||
@@ -299,6 +326,11 @@ export class GameScene implements Scene {
 
                 void this.walkToTarget(hotspot, context);
             });
+
+        if (this.initialSequenceId && !this.initialSequencePlayed) {
+            this.initialSequencePlayed = true;
+            void this.runSequence(this.initialSequenceId, context);
+        }
     }
 
     public exit(context: SceneContext): void {
@@ -373,8 +405,15 @@ export class GameScene implements Scene {
 
         const dialogueView = this.getDialogueSession().view;
         const dialoguePresenting = this.getDialoguePresenter().isPresenting;
+        const cinematicUI =
+            this.classicUIVisible && !this.classicUIInteractive;
 
-        if (dialogueView && !dialoguePresenting) {
+        if (cinematicUI) {
+            this.drawClassicAdventureUI(
+                context,
+                interfaceBounds
+            );
+        } else if (dialogueView && !dialoguePresenting) {
             this.dialoguePanel.draw(
                 context.renderer,
                 interfaceBounds,
@@ -386,16 +425,9 @@ export class GameScene implements Scene {
                 interfaceBounds
             );
         } else {
-            this.adventureUI.draw(
-                context.renderer,
-                interfaceBounds,
-                {
-                    selectedVerb: this.verbController.selectedVerb,
-                    targetName: this.hoveredTargetName,
-                    statusMessage: this.message,
-                    items: context.inventory.items
-                },
-                context.assets
+            this.drawClassicAdventureUI(
+                context,
+                interfaceBounds
             );
         }
 
@@ -413,6 +445,25 @@ export class GameScene implements Scene {
             );
         }
 
+    }
+
+    private drawClassicAdventureUI(
+        context: SceneContext,
+        bounds: {x: number; y: number; width: number; height: number}
+    ): void {
+        this.adventureUI.draw(
+            context.renderer,
+            bounds,
+            {
+                selectedVerb: this.verbController.selectedVerb,
+                targetName: this.hoveredTargetName,
+                statusMessage: this.message,
+                items: context.inventory.items,
+                visible: this.classicUIVisible,
+                interactive: this.classicUIInteractive
+            },
+            context.assets
+        );
     }
 
     private applyInteractionResult(

@@ -2,6 +2,16 @@ import type { ActionSequenceData } from "@uae/engine";
 
 export const demoSequencesData: readonly ActionSequenceData[] = [
     {
+        id: "opening-sunglasses",
+        actions: [
+            {
+                type: "say",
+                actorId: "franco",
+                message: "¡Necesito comprarme anteojos de sol!"
+            }
+        ]
+    },
+    {
         id: "buy-sunglasses",
         actions: [
             {
