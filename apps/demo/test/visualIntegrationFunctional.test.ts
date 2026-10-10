@@ -9,9 +9,11 @@ import { InventoryItemCatalog } from "../../../packages/engine/src/inventory/Inv
 import { InventoryPanel } from "../../../packages/engine/src/ui/InventoryPanel";
 import { Room } from "../../../packages/engine/src/room/Room";
 import { RoomVisualRenderer } from "../../../packages/engine/src/room/RoomVisualRenderer";
-import { demoAssets } from "../src/assets/demoAssets";
-import { demoActorsData } from "../src/data/demoActorsData";
-import { demoItemsData } from "../src/data/demoItemsData";
+import {
+    contentActors,
+    contentAssets,
+    contentItems
+} from "./support/uaeTestContent";
 
 function assert(condition: boolean, message: string): void {
     if (!condition) {
@@ -19,7 +21,7 @@ function assert(condition: boolean, message: string): void {
     }
 }
 
-const assets = new AssetCatalog(demoAssets);
+const assets = new AssetCatalog(contentAssets);
 const drawnImages: ImageOptions[] = [];
 const renderer = {
     getSize: () => ({
@@ -33,14 +35,14 @@ const renderer = {
     }
 } as unknown as Renderer;
 
-const actorAssetIds = new ActorAssetCollector().collect(demoActorsData);
+const actorAssetIds = new ActorAssetCollector().collect(contentActors);
 
 assert(actorAssetIds.length === 7, "All actor animation assets should be collected once");
 assert(actorAssetIds.includes("franco-idle"), "Franco's idle asset should be preloaded");
 assert(actorAssetIds.includes("fede-idle"), "Fede's idle asset should be preloaded");
 assert(actorAssetIds.includes("gon-idle"), "Gon's idle asset should be preloaded");
 
-const actors = new ActorCollection(demoActorsData);
+const actors = new ActorCollection(contentActors);
 const actorRenderer = new ActorRenderer();
 
 actorRenderer.draw(renderer, actors, assets);
@@ -72,7 +74,7 @@ assert(
     "ActorRenderer should draw Gon facing left"
 );
 
-const depthActors = new ActorCollection(demoActorsData);
+const depthActors = new ActorCollection(contentActors);
 const depthFranco = depthActors.getById("franco");
 const room = new Room({
     id: "depth-room",
@@ -149,7 +151,7 @@ assert(
     "ActorRenderer should flip the walk frame for leftward movement"
 );
 
-const inventoryAssetIds = new InventoryAssetCollector().collect(demoItemsData);
+const inventoryAssetIds = new InventoryAssetCollector().collect(contentItems);
 
 assert(
     inventoryAssetIds.length === 1 && inventoryAssetIds[0] === "calculator-icon",
@@ -157,7 +159,7 @@ assert(
 );
 
 const inventory = new Inventory(
-    new InventoryItemCatalog(demoItemsData),
+    new InventoryItemCatalog(contentItems),
     ["calculator"]
 );
 

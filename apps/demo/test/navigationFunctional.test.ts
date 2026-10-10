@@ -19,14 +19,14 @@ import type {
 import { RoomCollection } from "../../../packages/engine/src/room/RoomCollection";
 import { RoomManager } from "../../../packages/engine/src/room/RoomManager";
 import { GameState } from "../../../packages/engine/src/state/GameState";
-import { demoActorsData } from "../src/data/demoActorsData";
-import { demoDialoguesData } from "../src/data/demoDialoguesData";
-import { demoInteractionsData } from "../src/data/demoInteractionsData";
-import { demoItemsData } from "../src/data/demoItemsData";
 import {
-    demoInteractionPositions,
-    demoWalkableArea
-} from "../src/data/demoRoomGeometry";
+    contentActors,
+    contentDialogues,
+    contentInteractionPositions,
+    contentInteractions,
+    contentItems,
+    contentWalkableArea
+} from "./support/uaeTestContent";
 
 function assert(condition: boolean, message: string): void {
     if (!condition) {
@@ -41,7 +41,7 @@ function assertEqual<T>(actual: T, expected: T, message: string): void {
 }
 
 async function runTest(): Promise<void> {
-    const actors = new ActorCollection(demoActorsData);
+    const actors = new ActorCollection(contentActors);
     const actorStates: string[] = [];
     let releaseFirstMovementTick: (() => void) | null = null;
     let shouldHoldMovement = true;
@@ -78,7 +78,7 @@ async function runTest(): Promise<void> {
                     depthY: 527
                 }
             ],
-            walkableArea: demoWalkableArea,
+            walkableArea: contentWalkableArea,
             hotspots: [
                 {
                     id: "fede",
@@ -87,7 +87,7 @@ async function runTest(): Promise<void> {
                     y: 253,
                     width: 150,
                     height: 272,
-                    interactionPosition: demoInteractionPositions.fede,
+                    interactionPosition: contentInteractionPositions.fede,
                     defaultVerb: "talkTo"
                 }
             ]
@@ -98,16 +98,16 @@ async function runTest(): Promise<void> {
     const navigation = new NavigationController(roomManager, movement, facing);
     const state = new GameState();
     const inventory = new Inventory(
-        new InventoryItemCatalog(demoItemsData)
+        new InventoryItemCatalog(contentItems)
     );
     const interactions = new InteractionExecutor(
         roomManager,
-        new VerbInteractionCollection(demoInteractionsData),
+        new VerbInteractionCollection(contentInteractions),
         state,
         inventory
     );
     const dialogue = new DialogueSession(
-        new DialogueCollection(demoDialoguesData),
+        new DialogueCollection(contentDialogues),
         state,
         inventory
     );
@@ -305,7 +305,7 @@ async function runTest(): Promise<void> {
     );
 
     assert(
-        debugLines.length >= demoWalkableArea.points.length + 5,
+        debugLines.length >= contentWalkableArea.points.length + 5,
         "Explicit navigation debug should draw polygon, anchor, interaction and depth lines"
     );
     assert(

@@ -9,9 +9,11 @@ import { InventoryItemCatalog } from "../../../packages/engine/src/inventory/Inv
 import { GameState } from "../../../packages/engine/src/state/GameState";
 import { ActorSpeechController } from "../../../packages/engine/src/speech/ActorSpeechController";
 import { ActorSpeechRenderer } from "../../../packages/engine/src/speech/ActorSpeechRenderer";
-import { demoActorsData } from "../src/data/demoActorsData";
-import { demoDialoguesData } from "../src/data/demoDialoguesData";
-import { demoItemsData } from "../src/data/demoItemsData";
+import {
+    contentActors,
+    contentDialogues,
+    contentItems
+} from "./support/uaeTestContent";
 
 function assert(condition: boolean, message: string): void {
     if (!condition) {
@@ -32,13 +34,13 @@ async function flushMicrotasks(): Promise<void> {
 }
 
 async function runTest(): Promise<void> {
-    const actors = new ActorCollection(demoActorsData);
+    const actors = new ActorCollection(contentActors);
     const state = new GameState();
     const inventory = new Inventory(
-        new InventoryItemCatalog(demoItemsData)
+        new InventoryItemCatalog(contentItems)
     );
     const session = new DialogueSession(
-        new DialogueCollection(demoDialoguesData),
+        new DialogueCollection(contentDialogues),
         state,
         inventory
     );

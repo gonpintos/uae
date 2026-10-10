@@ -10,6 +10,15 @@ export * from "./actor/InteractionFacingController";
 
 export * from "./config/EngineConfig";
 
+export * from "./content/SceneEntryRegistry";
+export * from "./content/UaeAssetClosure";
+export * from "./content/UaeContentError";
+export * from "./content/UaeContentTypes";
+export * from "./content/UaeContentValidator";
+export * from "./content/UaeGameLoader";
+export * from "./content/UaeRuntimeAdapter";
+export * from "./content/UaeYamlParser";
+
 export * from "./engine/Engine";
 
 export * from "./debug/HotspotDebugRenderer";

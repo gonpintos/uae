@@ -18,8 +18,7 @@ import { GameLayout } from "../../../packages/engine/src/ui/GameLayout";
 import { DialoguePanel } from "../../../packages/engine/src/ui/DialoguePanel";
 import { InventoryPanel } from "../../../packages/engine/src/ui/InventoryPanel";
 import { VerbController } from "../../../packages/engine/src/verb/VerbController";
-import { demoAssets } from "../src/assets/demoAssets";
-import { demoItemsData } from "../src/data/demoItemsData";
+import { contentAssets, contentItems } from "./support/uaeTestContent";
 
 function assert(condition: boolean, message: string): void {
     if (!condition) {
@@ -62,7 +61,7 @@ assertEqual(
 );
 
 const inventory = new Inventory(
-    new InventoryItemCatalog(demoItemsData),
+    new InventoryItemCatalog(contentItems),
     ["calculator"]
 );
 const ui = new ClassicAdventureUI();
@@ -75,7 +74,7 @@ ui.draw(
         targetName: "Fede",
         items: inventory.items
     },
-    new AssetCatalog(demoAssets)
+    new AssetCatalog(contentAssets)
 );
 
 assert(
@@ -111,7 +110,7 @@ ui.draw(
         visible: true,
         interactive: false
     },
-    new AssetCatalog(demoAssets)
+    new AssetCatalog(contentAssets)
 );
 
 assert(ui.isVisible, "Cinematic UI should remain visible");
@@ -203,7 +202,7 @@ images.length = 0;
 new InventoryPanel().draw(
     renderer,
     inventory.items,
-    new AssetCatalog(demoAssets),
+    new AssetCatalog(contentAssets),
     {x: 720, y: 574, width: 548, height: 134}
 );
 assertEqual(texts.length, 0, "Inventory cells should not draw item names or descriptions");
@@ -225,7 +224,7 @@ ui.draw(
         targetName: "Calculadora",
         items: inventory.items
     },
-    new AssetCatalog(demoAssets)
+    new AssetCatalog(contentAssets)
 );
 assert(
     texts.some((entry) => entry.text === "Usar Calculadora"),
@@ -246,7 +245,7 @@ ui.draw(
         targetName: "Calculadora",
         items: inventory.items
     },
-    new AssetCatalog(demoAssets)
+    new AssetCatalog(contentAssets)
 );
 assert(
     texts.some((entry) => entry.text === "Mirar Calculadora"),

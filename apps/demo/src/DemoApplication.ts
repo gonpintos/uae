@@ -1,17 +1,7 @@
-import {
-    ActorAssetCollector,
-    Engine,
-    IntroAssetCollector,
-    InventoryAssetCollector,
-    RoomAssetCollector
-} from "@uae/engine";
+import { Engine } from "@uae/engine";
 
-import { demoAssets } from "./assets/demoAssets";
-import { demoActorsData } from "./data/demoActorsData";
-import { demoItemsData } from "./data/demoItemsData";
-import { demoIntroData } from "./data/demoIntroData";
-import { demoRoomsData } from "./data/demoRoomsData";
-import { createDemoInitialScene } from "./demoSceneFlow";
+import { loadUaeContent } from "./content/uaeContent";
+import { createUaeInitialScene } from "./uaeSceneFlow";
 
 export class DemoApplication {
     private readonly engine: Engine;
@@ -21,34 +11,25 @@ export class DemoApplication {
     }
 
     public async run(container: HTMLElement): Promise<void> {
-        const roomAssetCollector = new RoomAssetCollector();
-        const actorAssetCollector = new ActorAssetCollector();
-        const introAssetCollector = new IntroAssetCollector();
-        const inventoryAssetCollector = new InventoryAssetCollector();
+        const game = loadUaeContent();
 
-        const requiredAssetIds = [
-            ...introAssetCollector.collect(demoIntroData),
-            ...roomAssetCollector.collect(demoRoomsData),
-            ...actorAssetCollector.collect(demoActorsData),
-            ...inventoryAssetCollector.collect(demoItemsData)
-        ];
-    
+        globalThis.document.title = game.title;
+
         await this.engine.start({
             container,
-            initialScene: createDemoInitialScene(),
-            assets: demoAssets,
-            requiredAssetIds,
-            inventoryItems: demoItemsData,
+            initialScene: createUaeInitialScene(game),
+            assets: game.assets,
+            requiredAssetIds: game.requiredAssetIds,
+            initialState: game.initialState,
+            inventoryItems: game.items,
+            initialInventoryItemIds: game.initialInventoryItemIds,
             config: {
                 debug: {
                     enabled: false,
                     showHotspots: false,
                     showNavigation: false
                 },
-                resolution: {
-                    width: 1280,
-                    height: 720
-                }
+                resolution: game.resolution
             }
         });
     }

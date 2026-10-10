@@ -10,8 +10,7 @@ import { RoomManager } from "../../../packages/engine/src/room/RoomManager";
 import { GameState } from "../../../packages/engine/src/state/GameState";
 import { InventoryPanel } from "../../../packages/engine/src/ui/InventoryPanel";
 import { VerbPanel } from "../../../packages/engine/src/ui/VerbPanel";
-import { demoInteractionsData } from "../src/data/demoInteractionsData";
-import { demoItemsData } from "../src/data/demoItemsData";
+import { contentInteractions, contentItems } from "./support/uaeTestContent";
 
 function assert(condition: boolean, message: string): void {
     if (!condition) {
@@ -21,7 +20,7 @@ function assert(condition: boolean, message: string): void {
 
 const state = new GameState();
 const inventory = new Inventory(
-    new InventoryItemCatalog(demoItemsData)
+    new InventoryItemCatalog(contentItems)
 );
 const rooms = new RoomCollection([
     {
@@ -33,7 +32,7 @@ const rooms = new RoomCollection([
 ]);
 const executor = new InteractionExecutor(
     new RoomManager(rooms, "demo-room"),
-    new VerbInteractionCollection(demoInteractionsData),
+    new VerbInteractionCollection(contentInteractions),
     state,
     inventory
 );

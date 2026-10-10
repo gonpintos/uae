@@ -24,6 +24,7 @@ import {
     RoomCollection,
     RoomManager,
     RoomVisualRenderer,
+    SceneEntryRegistry,
     ScreenTitle,
     VerbController,
     VerbInteractionCollection,
@@ -39,8 +40,16 @@ import {
     type Scene,
     type SceneContext,
     type VerbId,
+    type VerbData,
     type VerbInteractionData
 } from "@uae/engine";
+
+export interface GameSceneOptions {
+    verbs?: readonly VerbData[];
+    sceneId?: string;
+    entryOnce?: boolean;
+    entryRegistry?: SceneEntryRegistry;
+}
 
 export class GameScene implements Scene {
     private readonly actors: ActorCollection;
@@ -81,7 +90,7 @@ export class GameScene implements Scene {
 
     private readonly navigationDebugRenderer = new NavigationDebugRenderer();
 
-    private readonly adventureUI = new ClassicAdventureUI();
+    private readonly adventureUI: ClassicAdventureUI;
 
     private readonly cursorRenderer = new GameCursor();
 
@@ -101,7 +110,7 @@ export class GameScene implements Scene {
 
     private cursorPosition: Point | null = null;
 
-    private readonly verbController = new VerbController();
+    private readonly verbController: VerbController;
 
     private sceneEnded = false;
 
@@ -112,6 +121,12 @@ export class GameScene implements Scene {
     private readonly controlledActorId: string;
 
     private readonly initialSequenceId: string | null;
+
+    private readonly sceneId: string;
+
+    private readonly entryOnce: boolean;
+
+    private readonly entryRegistry: SceneEntryRegistry | null;
 
     private initialSequencePlayed = false;
 
@@ -127,7 +142,8 @@ export class GameScene implements Scene {
         actorsData: readonly ActorData[],
         sequencesData: readonly ActionSequenceData[],
         controlledActorId: string,
-        initialSequenceId?: string
+        initialSequenceId?: string,
+        options: GameSceneOptions = {}
     ) {
         const rooms = new RoomCollection(roomsData);
 
@@ -138,6 +154,11 @@ export class GameScene implements Scene {
         this.sequences = new ActionSequenceCollection(sequencesData);
         this.controlledActorId = controlledActorId;
         this.initialSequenceId = initialSequenceId ?? null;
+        this.sceneId = options.sceneId ?? initialRoomId;
+        this.entryOnce = options.entryOnce ?? true;
+        this.entryRegistry = options.entryRegistry ?? null;
+        this.verbController = new VerbController(options.verbs);
+        this.adventureUI = new ClassicAdventureUI({verbs: options.verbs});
     }
 
     public enter(context: SceneContext): void {
@@ -367,8 +388,7 @@ export class GameScene implements Scene {
                 }
             });
 
-        if (this.initialSequenceId && !this.initialSequencePlayed) {
-            this.initialSequencePlayed = true;
+        if (this.initialSequenceId && this.shouldRunInitialSequence()) {
             void this.runSequence(this.initialSequenceId, context);
         }
     }
@@ -734,6 +754,31 @@ export class GameScene implements Scene {
         }
 
         return this.dialogueSession;
+    }
+
+    private shouldRunInitialSequence(): boolean {
+        if (!this.initialSequenceId) {
+            return false;
+        }
+
+        if (this.entryRegistry) {
+            return this.entryRegistry.shouldRun(
+                this.sceneId,
+                this.initialSequenceId,
+                this.entryOnce
+            );
+        }
+
+        if (!this.entryOnce) {
+            return true;
+        }
+
+        if (this.initialSequencePlayed) {
+            return false;
+        }
+
+        this.initialSequencePlayed = true;
+        return true;
     }
 
     private getInteractionExecutor(): InteractionExecutor {

@@ -8,9 +8,11 @@ import { RoomCollection } from "../../../packages/engine/src/room/RoomCollection
 import { RoomManager } from "../../../packages/engine/src/room/RoomManager";
 import { ActorSpeechController } from "../../../packages/engine/src/speech/ActorSpeechController";
 import { GameState } from "../../../packages/engine/src/state/GameState";
-import { demoActorsData } from "../src/data/demoActorsData";
-import { demoInteractionsData } from "../src/data/demoInteractionsData";
-import { demoItemsData } from "../src/data/demoItemsData";
+import {
+    contentActors,
+    contentInteractions,
+    contentItems
+} from "./support/uaeTestContent";
 
 function assert(condition: boolean, message: string): void {
     if (!condition) {
@@ -19,9 +21,9 @@ function assert(condition: boolean, message: string): void {
 }
 
 async function runTest(): Promise<void> {
-    const actors = new ActorCollection(demoActorsData);
+    const actors = new ActorCollection(contentActors);
     const inventory = new Inventory(
-        new InventoryItemCatalog(demoItemsData),
+        new InventoryItemCatalog(contentItems),
         ["calculator"]
     );
     const state = new GameState();
@@ -35,7 +37,7 @@ async function runTest(): Promise<void> {
     ]);
     const executor = new InteractionExecutor(
         new RoomManager(rooms, "interaction-room"),
-        new VerbInteractionCollection(demoInteractionsData),
+        new VerbInteractionCollection(contentInteractions),
         state,
         inventory
     );

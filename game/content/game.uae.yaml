@@ -1,0 +1,100 @@
+format: uae-game
+version: 1
+
+id: uae-demo
+title: UAE
+
+resolution:
+  width: 1280
+  height: 720
+
+start:
+  intro: copenhagen-1999
+  scene: los-anteojos-de-franco
+
+# Los source de escenas se resuelven con relación a este manifiesto.
+scenes:
+  - id: los-anteojos-de-franco
+    source: ./scenes/los-anteojos-de-franco.uae.yaml
+
+# Las rutas de assets se resuelven contra assetBasePath. Ese base path es una
+# URL relativa al documento HTML para conservar compatibilidad con hosting web.
+assetBasePath: ./assets
+assets:
+  intro-presentation: intro/intro-presentacion.png
+  copenhagen-street: backgrounds/copenhagen-street.png
+  sunglasses-stand: objects/sunglasses-stand.png
+  franco-idle: actors/franco/idle.png
+  franco-walk-01: actors/franco/walk-01.png
+  franco-walk-02: actors/franco/walk-02.png
+  franco-walk-03: actors/franco/walk-03.png
+  franco-walk-04: actors/franco/walk-04.png
+  fede-idle: actors/fede.png
+  gon-idle: actors/gon.png
+  calculator-icon: inventory/calculator.png
+
+verbs:
+  - id: goTo
+    label: Ir a
+    default: true
+  - id: look
+    label: Mirar
+  - id: use
+    label: Usar
+  - id: talkTo
+    label: Hablar con
+
+items:
+  - id: calculator
+    displayName: Calculadora
+    description: "¡La mágica!"
+    defaultVerb: use
+    icon:
+      asset: calculator-icon
+      width: 32
+      height: 48
+
+initialInventory: []
+
+# Las state keys son globales aunque su uso narrativo pertenezca a una escena.
+# `initial` es opcional para valores que todavía no existen al comenzar.
+state:
+  sunglasses-price-known:
+    type: boolean
+    initial: false
+  sunglasses-price-dkk:
+    type: number
+  exchange-rate-known:
+    type: boolean
+    initial: false
+  dkk-per-usd:
+    type: number
+  sunglasses-price-calculated:
+    type: boolean
+    initial: false
+
+intros:
+  - id: copenhagen-1999
+    backgroundColor: "#000000"
+    textColor: "#fff3a6"
+    screens:
+      - type: text
+        text: |-
+          COPENHAGUE
+          1999
+        durationMs: 2200
+        fontSize: 68
+        lineHeight: 86
+      - type: image
+        asset: intro-presentation
+        aspectRatio: 1.7768331562
+        caption: |-
+          Tres jóvenes argentinos.
+          Una ciudad desconocida.
+          Y una economía que exige hacer cuentas.
+        durationMs: 5000
+      - type: text
+        text: LOS ANTEOJOS DE FRANCO
+        durationMs: 2500
+        fontSize: 60
+        lineHeight: 72

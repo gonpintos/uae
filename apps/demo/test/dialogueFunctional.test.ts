@@ -9,9 +9,11 @@ import { GameState } from "../../../packages/engine/src/state/GameState";
 import { DialoguePanel } from "../../../packages/engine/src/ui/DialoguePanel";
 import { GameLayout } from "../../../packages/engine/src/ui/GameLayout";
 import { InventoryPanel } from "../../../packages/engine/src/ui/InventoryPanel";
-import { demoDialoguesData } from "../src/data/demoDialoguesData";
-import { demoAssets } from "../src/assets/demoAssets";
-import { demoItemsData } from "../src/data/demoItemsData";
+import {
+    contentAssets,
+    contentDialogues,
+    contentItems
+} from "./support/uaeTestContent";
 
 function assert(condition: boolean, message: string): void {
     if (!condition) {
@@ -24,7 +26,7 @@ const state = new GameState({
 });
 
 const inventory = new Inventory(
-    new InventoryItemCatalog(demoItemsData)
+    new InventoryItemCatalog(contentItems)
 );
 
 state.setFlag("intro-seen");
@@ -41,7 +43,7 @@ assert(
 );
 
 const session = new DialogueSession(
-    new DialogueCollection(demoDialoguesData),
+    new DialogueCollection(contentDialogues),
     state,
     inventory
 );
@@ -195,7 +197,7 @@ assert(
 
 const inventoryPanel = new InventoryPanel();
 
-inventoryPanel.draw(renderer, inventory.items, new AssetCatalog(demoAssets));
+inventoryPanel.draw(renderer, inventory.items, new AssetCatalog(contentAssets));
 
 assert(
     drawnImages.some(
@@ -205,7 +207,7 @@ assert(
 );
 
 const reopenedSession = new DialogueSession(
-    new DialogueCollection(demoDialoguesData),
+    new DialogueCollection(contentDialogues),
     state,
     inventory
 );

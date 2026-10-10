@@ -7,9 +7,11 @@ import { InventoryItemCatalog } from "../../../packages/engine/src/inventory/Inv
 import { RoomCollection } from "../../../packages/engine/src/room/RoomCollection";
 import { RoomManager } from "../../../packages/engine/src/room/RoomManager";
 import { GameState } from "../../../packages/engine/src/state/GameState";
-import { demoDialoguesData } from "../src/data/demoDialoguesData";
-import { demoInteractionsData } from "../src/data/demoInteractionsData";
-import { demoItemsData } from "../src/data/demoItemsData";
+import {
+    contentDialogues,
+    contentInteractions,
+    contentItems
+} from "./support/uaeTestContent";
 
 function assert(condition: boolean, message: string): void {
     if (!condition) {
@@ -20,7 +22,7 @@ function assert(condition: boolean, message: string): void {
 function createRuntime() {
     const state = new GameState();
     const inventory = new Inventory(
-        new InventoryItemCatalog(demoItemsData),
+        new InventoryItemCatalog(contentItems),
         ["calculator"]
     );
     const rooms = new RoomCollection([
@@ -36,13 +38,13 @@ function createRuntime() {
         state,
         inventory,
         dialogue: new DialogueSession(
-            new DialogueCollection(demoDialoguesData),
+            new DialogueCollection(contentDialogues),
             state,
             inventory
         ),
         interactions: new InteractionExecutor(
             new RoomManager(rooms, "demo-room"),
-            new VerbInteractionCollection(demoInteractionsData),
+            new VerbInteractionCollection(contentInteractions),
             state,
             inventory
         )

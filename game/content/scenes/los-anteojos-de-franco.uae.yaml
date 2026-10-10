@@ -1,0 +1,341 @@
+format: uae-scene
+version: 1
+
+id: los-anteojos-de-franco
+name: Los anteojos de Franco
+controlledActor: franco
+
+entry:
+  sequence: opening-sunglasses
+  once: true
+
+room:
+  id: demo-room
+  name: Demo Room
+  visuals:
+    - id: copenhagen-street-background
+      asset: copenhagen-street
+      bounds: {x: 0, y: -85, width: 1280, height: 720}
+      layer: roomBackground
+  walkableArea:
+    type: polygon
+    points:
+      - {x: 0, y: 460}
+      - {x: 90, y: 450}
+      - {x: 210, y: 435}
+      - {x: 360, y: 420}
+      - {x: 520, y: 405}
+      - {x: 720, y: 397}
+      - {x: 880, y: 402}
+      - {x: 1020, y: 420}
+      - {x: 1180, y: 445}
+      - {x: 1280, y: 460}
+      - {x: 1280, y: 529}
+      - {x: 0, y: 529}
+
+entities:
+  - id: franco
+    kind: actor
+    displayName: Franco
+    position: {x: 656, y: 525}
+    speechColor: "#fff3a6"
+    walkSpeedPixelsPerSecond: 250
+    initialFacing: right
+    visual:
+      size: {width: 192, height: 272}
+      animations:
+        sourceFacing: right
+        idle:
+          frames: [franco-idle]
+        walk:
+          frames:
+            - franco-walk-01
+            - franco-walk-02
+            - franco-walk-03
+            - franco-walk-04
+          frameDurationMs: 180
+
+  - id: fede
+    kind: actor
+    displayName: Fede
+    position: {x: 856, y: 525}
+    speechColor: "#d8b4fe"
+    initialFacing: left
+    visual:
+      size: {width: 192, height: 272}
+      animations:
+        sourceFacing: right
+        idle:
+          frames: [fede-idle]
+    hotspot:
+      bounds: {x: 800, y: 253, width: 150, height: 272}
+    interactionPosition: {x: 740, y: 525}
+    defaultVerb: talkTo
+
+  - id: gon
+    kind: actor
+    displayName: Gon
+    position: {x: 1056, y: 525}
+    speechColor: "#9fe8ff"
+    initialFacing: left
+    visual:
+      size: {width: 192, height: 272}
+      animations:
+        sourceFacing: right
+        idle:
+          frames: [gon-idle]
+    hotspot:
+      bounds: {x: 1000, y: 253, width: 150, height: 272}
+    interactionPosition: {x: 940, y: 525}
+    defaultVerb: talkTo
+
+  - id: sunglasses-stand
+    kind: object
+    displayName: Tienda de anteojos
+    visual:
+      asset: sunglasses-stand
+      bounds: {x: 40, y: 266, width: 440, height: 264}
+    hotspot: true
+    interactionPosition: {x: 536, y: 525}
+    defaultVerb: look
+    depthY: 527
+
+# Los candidatos con el mismo verb + target se evalúan de arriba hacia abajo.
+interactions:
+  - verb: look
+    target: sunglasses-stand
+    conditions:
+      - type: state
+        key: sunglasses-price-calculated
+        operator: equals
+        value: true
+    action:
+      type: say
+      actor: franco
+      text: "¡Ya puedo comprar los anteojos!"
+
+  - verb: look
+    target: sunglasses-stand
+    conditions:
+      - type: state
+        key: sunglasses-price-calculated
+        operator: notEquals
+        value: true
+    effects:
+      - type: setState
+        key: sunglasses-price-known
+        value: true
+      - type: setState
+        key: sunglasses-price-dkk
+        value: 75
+    action:
+      type: say
+      actor: franco
+      text: |-
+        ¡Uh, acá venden anteojos!
+        75 coronas danesas.
+
+  - verb: look
+    target: gon
+    action:
+      type: say
+      actor: franco
+      text: Muy hello-hello...
+
+  - verb: look
+    target: fede
+    action:
+      type: say
+      actor: franco
+      text: Nada que decir.
+
+  - verb: look
+    target: calculator
+    action:
+      type: say
+      actor: franco
+      text: "¡La mágica!"
+
+  - verb: use
+    target: calculator
+    conditions:
+      - type: state
+        key: exchange-rate-known
+        operator: notEquals
+        value: true
+    action:
+      type: say
+      actor: franco
+      text: No tengo la cotización de la corona danesa.
+
+  - verb: use
+    target: calculator
+    conditions:
+      - type: state
+        key: exchange-rate-known
+        operator: equals
+        value: true
+      - type: state
+        key: sunglasses-price-known
+        operator: notEquals
+        value: true
+    action:
+      type: say
+      actor: franco
+      text: No tengo el precio de los anteojos.
+
+  - verb: use
+    target: calculator
+    conditions:
+      - type: state
+        key: exchange-rate-known
+        operator: equals
+        value: true
+      - type: state
+        key: sunglasses-price-known
+        operator: equals
+        value: true
+    effects:
+      - type: setState
+        key: sunglasses-price-calculated
+        value: true
+    action:
+      type: say
+      actor: franco
+      text: "¡Diez pesos! Están baratos. Me los compro."
+
+  - verb: talkTo
+    target: gon
+    action:
+      type: startDialogue
+      dialogue: gon-sunglasses
+
+  - verb: talkTo
+    target: fede
+    action:
+      type: startDialogue
+      dialogue: fede-sunglasses
+
+  - verb: goTo
+    target: sunglasses-stand
+    conditions:
+      - type: state
+        key: sunglasses-price-calculated
+        operator: notEquals
+        value: true
+    action:
+      type: say
+      actor: franco
+      text: Primero quiero saber cuánto salen en pesos.
+
+  - verb: goTo
+    target: sunglasses-stand
+    conditions:
+      - type: state
+        key: sunglasses-price-calculated
+        operator: equals
+        value: true
+    action:
+      type: triggerSequence
+      sequence: buy-sunglasses
+
+dialogues:
+  - id: fede-sunglasses
+    player: franco
+    npc: fede
+    start: main
+    nodes:
+      main:
+        options:
+          - id: ask-for-calculator
+            playerLine: "¿Me prestás la calculadora?"
+            npcLine: Sí. Tomá.
+            playerClosingLine: Gracias.
+            conditions:
+              - type: hasItem
+                item: calculator
+                value: false
+            effects:
+              - type: giveItem
+                item: calculator
+            endDialogue: true
+
+          - id: ask-how-to-use-calculator
+            playerLine: "¿Cómo se usa esta maravilla?"
+            npcLine: Usá la picardía.
+            conditions:
+              - type: hasItem
+                item: calculator
+                value: true
+            goto: main
+
+          - id: ask-about-sunglasses
+            playerLine: "¿Vos te comprarías esos anteojos?"
+            npcLine: Claro que sí. Salvo que no.
+            goto: main
+
+          - id: leave
+            playerLine: Ahora vuelvo.
+            endDialogue: true
+
+  - id: gon-sunglasses
+    player: franco
+    npc: gon
+    start: main
+    nodes:
+      main:
+        options:
+          - id: ask-exchange-rate
+            playerLine: "¿Cuál es la cotización de la corona danesa?"
+            npcLine: 1 dólar está 7,43 coronas danesas.
+            effects:
+              - type: setState
+                key: exchange-rate-known
+                value: true
+              - type: setState
+                key: dkk-per-usd
+                value: 7.43
+            endDialogue: true
+
+          - id: hello-hello
+            playerLine: ¿Hoy no hay ningún “hello, hello”?
+            npcLine: I AM REALLY!
+            goto: main
+
+          - id: leave
+            playerLine: Voy a mirar los anteojos.
+            endDialogue: true
+
+sequences:
+  - id: opening-sunglasses
+    actions:
+      - type: say
+        actor: franco
+        text: "¡Necesito comprarme anteojos de sol!"
+
+  - id: buy-sunglasses
+    actions:
+      - type: moveTo
+        actor: franco
+        x: 536
+        y: 525
+        durationMs: 720
+      - type: wait
+        durationMs: 3000
+      - type: say
+        actor: franco
+        text: "¡Listo! Tengo mis anteojos."
+      - type: moveBySteps
+        actor: franco
+        steps: 5
+        deltaX: 40
+        deltaY: 0
+        stepDurationMs: 180
+      - type: wait
+        durationMs: 3000
+      - type: say
+        actor: franco
+        text: "¡Uy! ¿Dónde están mis anteojos?"
+      - type: showTitle
+        text: CONTINUARÁ
+      - type: endScene

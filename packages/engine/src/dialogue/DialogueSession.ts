@@ -36,6 +36,8 @@ export class DialogueSession {
 
     private lastTurn: DialogueTurn | null = null;
 
+    private activeNodeId: string | null = null;
+
     public constructor(
         dialogues: DialogueCollection,
         state: GameState,
@@ -65,6 +67,7 @@ export class DialogueSession {
 
     public start(dialogueId: string): void {
         this.activeDialogue = this.dialogues.getById(dialogueId);
+        this.activeNodeId = this.activeDialogue.startNodeId ?? null;
         this.lastTurn = null;
     }
 
@@ -93,12 +96,17 @@ export class DialogueSession {
 
         if (option.endsConversation) {
             this.activeDialogue = null;
+            this.activeNodeId = null;
             this.lastTurn = null;
 
             return {
                 turn,
                 ended: true
             };
+        }
+
+        if (option.gotoNodeId) {
+            this.activeNodeId = option.gotoNodeId;
         }
 
         this.lastTurn = turn;
@@ -112,7 +120,11 @@ export class DialogueSession {
     private getVisibleOptions(
         dialogue: DialogueData
     ): readonly DialogueOptionData[] {
-        return dialogue.options.filter((option) =>
+        const options = dialogue.nodes
+            ? dialogue.nodes.find((node) => node.id === this.activeNodeId)?.options ?? []
+            : dialogue.options ?? [];
+
+        return options.filter((option) =>
             this.rules.matchesAll(option.conditions ?? [])
         );
     }

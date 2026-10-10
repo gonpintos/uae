@@ -32,7 +32,38 @@ export class DialogueCollection {
     private assertUniqueOptionIds(dialogue: DialogueData): void {
         const optionIds = new Set<string>();
 
-        for (const option of dialogue.options) {
+        const nodes = dialogue.nodes ?? [];
+
+        if (nodes.length > 0) {
+            const nodeIds = new Set<string>();
+
+            for (const node of nodes) {
+                if (nodeIds.has(node.id)) {
+                    throw new Error(`Duplicate node id in dialogue ${dialogue.id}: ${node.id}`);
+                }
+                nodeIds.add(node.id);
+
+                for (const option of node.options) {
+                    this.assertUniqueOptionId(dialogue.id, option, optionIds);
+                }
+            }
+
+            if (!dialogue.startNodeId || !nodeIds.has(dialogue.startNodeId)) {
+                throw new Error(`Dialogue start node not found in ${dialogue.id}: ${dialogue.startNodeId ?? "(missing)"}`);
+            }
+
+            for (const node of nodes) {
+                for (const option of node.options) {
+                    if (option.gotoNodeId && !nodeIds.has(option.gotoNodeId)) {
+                        throw new Error(`Dialogue target node not found in ${dialogue.id}: ${option.gotoNodeId}`);
+                    }
+                }
+            }
+
+            return;
+        }
+
+        for (const option of dialogue.options ?? []) {
             this.assertUniqueOptionId(dialogue.id, option, optionIds);
         }
     }

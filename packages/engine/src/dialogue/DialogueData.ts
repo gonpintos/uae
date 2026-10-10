@@ -18,13 +18,23 @@ export interface DialogueOptionData {
     npcLine?: string;
     playerClosingLine?: string;
     endsConversation?: boolean;
+    gotoNodeId?: string;
     conditions?: readonly DialogueCondition[];
     effects?: readonly DialogueEffect[];
+}
+
+export interface DialogueNodeData {
+    id: string;
+    options: readonly DialogueOptionData[];
 }
 
 export interface DialogueData {
     id: string;
     player: DialogueSpeakerData;
     npc: DialogueSpeakerData;
-    options: readonly DialogueOptionData[];
+    /** Legacy flat dialogue options. */
+    options?: readonly DialogueOptionData[];
+    /** Node graph used by UAE Scene Format v1. */
+    nodes?: readonly DialogueNodeData[];
+    startNodeId?: string;
 }

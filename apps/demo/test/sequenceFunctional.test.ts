@@ -6,8 +6,7 @@ import { RenderLayer } from "../../../packages/engine/src/graphics/RenderLayer";
 import type { Renderer, TextOptions } from "../../../packages/engine/src/graphics/Renderer";
 import { ScreenTitle } from "../../../packages/engine/src/ui/ScreenTitle";
 import { VerbController } from "../../../packages/engine/src/verb/VerbController";
-import { demoActorsData } from "../src/data/demoActorsData";
-import { demoSequencesData } from "../src/data/demoSequencesData";
+import { contentActors, contentSequences } from "./support/uaeTestContent";
 
 function assert(condition: boolean, message: string): void {
     if (!condition) {
@@ -22,8 +21,8 @@ function assertEqual<T>(actual: T, expected: T, message: string): void {
 }
 
 async function runTest(): Promise<void> {
-    const actors = new ActorCollection(demoActorsData);
-    const sequences = new ActionSequenceCollection(demoSequencesData);
+    const actors = new ActorCollection(contentActors);
+    const sequences = new ActionSequenceCollection(contentSequences);
     const delays: number[] = [];
     const events: string[] = [];
     const speechDelays: number[] = [];

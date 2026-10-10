@@ -9,8 +9,7 @@ import { IntroAssetCollector } from "../../../packages/engine/src/intro/IntroAss
 import { IntroScene } from "../../../packages/engine/src/intro/IntroScene";
 import type { Scene } from "../../../packages/engine/src/scene/Scene";
 import type { SceneContext } from "../../../packages/engine/src/scene/SceneContext";
-import { demoAssets } from "../src/assets/demoAssets";
-import { demoIntroData } from "../src/data/demoIntroData";
+import { contentAssets, contentIntro } from "./support/uaeTestContent";
 
 function assert(condition: boolean, message: string): void {
     if (!condition) {
@@ -33,18 +32,18 @@ async function flushPlayback(): Promise<void> {
 
 async function runTest(): Promise<void> {
     assertEqual(
-        demoIntroData.screens.map((screen) => screen.type).join(","),
+        contentIntro.screens.map((screen) => screen.type).join(","),
         "text,image,text",
         "The intro screens should keep their declared order"
     );
     assertEqual(
-        demoIntroData.screens.map((screen) => screen.durationMs).join(","),
+        contentIntro.screens.map((screen) => screen.durationMs).join(","),
         "2200,5000,2500",
         "The intro should use the declared timings"
     );
 
-    const introAssetIds = new IntroAssetCollector().collect(demoIntroData);
-    const assets = new AssetCatalog(demoAssets);
+    const introAssetIds = new IntroAssetCollector().collect(contentIntro);
+    const assets = new AssetCatalog(contentAssets);
 
     assertEqual(
         introAssetIds.join(","),
@@ -95,7 +94,7 @@ async function runTest(): Promise<void> {
         exit: () => undefined
     } satisfies Scene;
     const intro = new IntroScene(
-        demoIntroData,
+        contentIntro,
         () => gameScene,
         (durationMs) => {
             durations.push(durationMs);
