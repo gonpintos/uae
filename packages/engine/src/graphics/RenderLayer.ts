@@ -5,5 +5,7 @@ export const RenderLayer = {
     RoomForeground: 300,
     Debug: 900,
     Interface: 1000,
-    Modal: 1100
+    Speech: 1050,
+    Modal: 1100,
+    Cursor: 2000
 } as const;

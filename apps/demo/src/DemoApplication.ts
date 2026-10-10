@@ -1,19 +1,17 @@
 import {
     ActorAssetCollector,
-    DiagnosticScene,
     Engine,
+    IntroAssetCollector,
     InventoryAssetCollector,
     RoomAssetCollector
 } from "@uae/engine";
 
 import { demoAssets } from "./assets/demoAssets";
 import { demoActorsData } from "./data/demoActorsData";
-import { demoDialoguesData } from "./data/demoDialoguesData";
 import { demoItemsData } from "./data/demoItemsData";
-import { demoInteractionsData } from "./data/demoInteractionsData";
+import { demoIntroData } from "./data/demoIntroData";
 import { demoRoomsData } from "./data/demoRoomsData";
-import { demoSequencesData } from "./data/demoSequencesData";
-import { GameScene } from "./scenes/GameScene";
+import { createDemoInitialScene } from "./demoSceneFlow";
 
 export class DemoApplication {
     private readonly engine: Engine;
@@ -25,9 +23,11 @@ export class DemoApplication {
     public async run(container: HTMLElement): Promise<void> {
         const roomAssetCollector = new RoomAssetCollector();
         const actorAssetCollector = new ActorAssetCollector();
+        const introAssetCollector = new IntroAssetCollector();
         const inventoryAssetCollector = new InventoryAssetCollector();
 
         const requiredAssetIds = [
+            ...introAssetCollector.collect(demoIntroData),
             ...roomAssetCollector.collect(demoRoomsData),
             ...actorAssetCollector.collect(demoActorsData),
             ...inventoryAssetCollector.collect(demoItemsData)
@@ -35,16 +35,7 @@ export class DemoApplication {
     
         await this.engine.start({
             container,
-            initialScene: new DiagnosticScene(
-                () => new GameScene(
-                    demoRoomsData,
-                    "demo-room",
-                    demoDialoguesData,
-                    demoInteractionsData,
-                    demoActorsData,
-                    demoSequencesData
-                )
-            ),
+            initialScene: createDemoInitialScene(),
             assets: demoAssets,
             requiredAssetIds,
             inventoryItems: demoItemsData,

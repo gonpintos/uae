@@ -24,6 +24,10 @@ export class ActorCollection implements Iterable<Actor> {
         return actor;
     }
 
+    public findById(actorId: string): Actor | null {
+        return this.actors.get(actorId) ?? null;
+    }
+
     public [Symbol.iterator](): Iterator<Actor> {
         return this.actors.values();
     }

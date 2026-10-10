@@ -75,7 +75,7 @@ function learnPrice(runtime: ReturnType<typeof createRuntime>): void {
     );
 
     assert(
-        response.type === "message" &&
+        response.type === "say" &&
             response.message === "¡Uh, acá venden anteojos!\n75 coronas danesas.",
         "Looking at the stand should show and remember its price."
     );
@@ -93,9 +93,9 @@ function calculate(runtime: ReturnType<typeof createRuntime>): void {
     const response = runtime.interactions.execute("use", "calculator");
 
     assert(
-        response.type === "message" &&
+        response.type === "say" &&
             response.message ===
-                "10 pesos\nFranco: «¡Diez pesos! Están baratos. Me los compro.»",
+                "¡Diez pesos! Están baratos. Me los compro.",
         "Using the calculator with both inputs should show the result."
     );
     assert(
@@ -111,7 +111,7 @@ const missingBothResponse = missingBoth.interactions.execute(
 );
 
 assert(
-    missingBothResponse.type === "message" &&
+    missingBothResponse.type === "say" &&
         missingBothResponse.message ===
             "No tengo la cotización de la corona danesa.",
     "Missing exchange rate should take priority when both inputs are absent."
@@ -126,7 +126,7 @@ const priceOnlyResponse = priceFirst.interactions.execute(
 );
 
 assert(
-    priceOnlyResponse.type === "message" &&
+    priceOnlyResponse.type === "say" &&
         priceOnlyResponse.message ===
             "No tengo la cotización de la corona danesa.",
     "Knowing only the price should still report the missing exchange rate."
@@ -141,7 +141,7 @@ const calculatedLook = priceFirst.interactions.execute(
 );
 
 assert(
-    calculatedLook.type === "message" &&
+    calculatedLook.type === "say" &&
         calculatedLook.message === "¡Ya puedo comprar los anteojos!",
     "Looking at the stand after calculating should use the completed response."
 );
@@ -166,7 +166,7 @@ const rateOnlyResponse = rateFirst.interactions.execute(
 );
 
 assert(
-    rateOnlyResponse.type === "message" &&
+    rateOnlyResponse.type === "say" &&
         rateOnlyResponse.message === "No tengo el precio de los anteojos.",
     "Knowing only the exchange rate should report the missing price."
 );
@@ -177,7 +177,7 @@ const blockedPurchase = rateFirst.interactions.execute(
 );
 
 assert(
-    blockedPurchase.type === "message" &&
+    blockedPurchase.type === "say" &&
         blockedPurchase.message ===
             "Primero quiero saber cuánto salen en pesos.",
     "The stand should remain blocked before calculating."

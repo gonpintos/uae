@@ -34,10 +34,10 @@ export class DialoguePanel {
     private optionBounds: DialogueOptionBounds[] = [];
 
     public constructor(options: DialoguePanelOptions = {}) {
-        this.height = options.height ?? 300;
-        this.padding = options.padding ?? 20;
-        this.optionHeight = options.optionHeight ?? 38;
-        this.optionGap = options.optionGap ?? 8;
+        this.height = options.height ?? 110;
+        this.padding = options.padding ?? 12;
+        this.optionHeight = options.optionHeight ?? 24;
+        this.optionGap = options.optionGap ?? 2;
         this.layer = options.layer ?? RenderLayer.Modal;
     }
 
@@ -72,44 +72,31 @@ export class DialoguePanel {
             text: `Hablando con ${view.npc.name}`,
             x: bounds.x + this.padding,
             y: bounds.y + 16,
-            fontSize: 20,
+            fontSize: 17,
             color: "#d6c5f2",
             fontWeight: "bold",
+            anchorY: 0.5,
             layer: this.layer + 2
         });
 
-        let optionsY = bounds.y + 54;
-
-        if (view.lastTurn) {
-            renderer.drawText({
-                text: `${view.player.name}: «${view.lastTurn.playerLine}»`,
-                x: bounds.x + this.padding,
-                y: bounds.y + 52,
-                fontSize: 17,
-                color: "#f1e9ff",
-                layer: this.layer + 2
-            });
-
-            if (view.lastTurn.npcLine) {
-                renderer.drawText({
-                    text: `${view.npc.name}: «${view.lastTurn.npcLine}»`,
-                    x: bounds.x + this.padding,
-                    y: bounds.y + 80,
-                    fontSize: 17,
-                    color: "#ffe4a8",
-                    layer: this.layer + 2
-                });
-            }
-
-            optionsY = bounds.y + 118;
-        }
+        const optionsY = bounds.y + 32;
+        const availableHeight = bounds.height - 38;
+        const optionHeight = Math.min(
+            this.optionHeight,
+            Math.max(
+                14,
+                (availableHeight -
+                    this.optionGap * Math.max(0, view.options.length - 1)) /
+                    Math.max(1, view.options.length)
+            )
+        );
 
         for (const [index, option] of view.options.entries()) {
             const optionBounds: Rectangle = {
                 x: bounds.x + this.padding,
-                y: optionsY + index * (this.optionHeight + this.optionGap),
+                y: optionsY + index * (optionHeight + this.optionGap),
                 width: bounds.width - this.padding * 2,
-                height: this.optionHeight
+                height: optionHeight
             };
 
             this.optionBounds.push({
@@ -129,9 +116,10 @@ export class DialoguePanel {
             renderer.drawText({
                 text: `${index + 1}. ${option.playerLine}`,
                 x: optionBounds.x + 12,
-                y: optionBounds.y + 8,
-                fontSize: 17,
+                y: optionBounds.y + optionBounds.height / 2,
+                fontSize: 15,
                 color: "#ffffff",
+                anchorY: 0.5,
                 layer: this.layer + 2
             });
         }

@@ -35,6 +35,7 @@ export const demoDialoguesData: readonly DialogueData[] = [
             {
                 id: "ask-how-to-use-calculator",
                 playerLine: "¿Cómo se usa esta maravilla?",
+                npcLine: "Usá la picardía.",
                 conditions: [
                     {
                         type: "hasItem",

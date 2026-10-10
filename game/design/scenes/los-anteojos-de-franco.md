@@ -7,6 +7,27 @@
 - **Año:** 1999
 - **Personaje controlado:** `franco`
 
+## Intro
+
+Antes de comenzar la escena jugable se reproducen estas pantallas:
+
+1. Durante **2,2 segundos**, sobre fondo negro:
+
+> **COPENHAGUE**<br>
+> **1999**
+
+2. Durante **5 segundos**, la imagen de presentación con el texto:
+
+> Tres jóvenes argentinos.<br>
+> Una ciudad desconocida.<br>
+> Y una economía que exige hacer cuentas.
+
+3. Durante **2,5 segundos**, sobre fondo negro:
+
+> **LOS ANTEOJOS DE FRANCO**
+
+Después comienza automáticamente la escena jugable.
+
 ## Situación
 
 Franco, Fede y Gon pasean por una calle de Copenhague.
@@ -31,6 +52,9 @@ Descubrir el precio de los anteojos en pesos y comprarlos.
 - ID: `fede`
 - Tiene una calculadora.
 - Puede prestársela a Franco.
+- Si Franco ya tiene la calculadora y pregunta cómo usarla, responde:
+
+> «Usá la picardía.»
 
 ### Gon
 
@@ -124,10 +148,6 @@ Si tiene cotización pero falta el precio:
 
 Si tiene precio y cotización:
 
-Se muestra:
-
-> 10 pesos
-
 Franco dice:
 
 > «¡Diez pesos! Están baratos. Me los compro.»
@@ -160,12 +180,17 @@ Cuando Franco ya realizó el cálculo y va al puesto:
 > «¡Listo! Tengo mis anteojos.»
 
 4. Franco se aleja automáticamente.
-5. Después de **cinco pasos**, intenta ponerse los anteojos.
-6. Franco dice:
+5. Después de **cinco pasos**, termina el movimiento y queda quieto.
+6. Espera **3 segundos**.
+7. Franco dice:
 
 > «¡Uy! ¿Dónde están mis anteojos?»
 
-7. Fin de la escena.
+8. Al terminar la frase, aparece centrado:
+
+> **CONTINUARÁ**
+
+9. Fin de la escena. El título permanece visible.
 
 Los anteojos no se recuperan.
 

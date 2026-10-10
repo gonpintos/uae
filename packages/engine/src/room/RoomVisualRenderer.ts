@@ -1,5 +1,6 @@
 import type { AssetCatalog } from "../assets/AssetCatalog";
 import type { Renderer } from "../graphics/Renderer";
+import { getWorldDepthLayer } from "../graphics/WorldDepth";
 
 import type { Room } from "./Room";
 
@@ -9,7 +10,11 @@ export class RoomVisualRenderer {
     public draw(renderer: Renderer,room: Room, assets: AssetCatalog): void {
         for (const visual of room.visuals) {
             
-            const layer = visual.layer ?? RenderLayer.RoomObject;
+            const layer = visual.layer ?? (
+                visual.depthY === undefined
+                    ? RenderLayer.RoomObject
+                    : getWorldDepthLayer(visual.depthY)
+            );
 
             if (visual.imageAssetId) {
                 renderer.drawImage({
@@ -40,7 +45,7 @@ export class RoomVisualRenderer {
                     y: visual.y + 12,
                     fontSize: 18,
                     color: "#ffffff",
-                    layer: layer + 1
+                    layer
                 });
             }
         }

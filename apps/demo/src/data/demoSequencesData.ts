@@ -7,8 +7,8 @@ export const demoSequencesData: readonly ActionSequenceData[] = [
             {
                 type: "moveTo",
                 actorId: "franco",
-                x: 440,
-                y: 338,
+                x: 536,
+                y: 610,
                 durationMs: 720
             },
             {
@@ -29,9 +29,17 @@ export const demoSequencesData: readonly ActionSequenceData[] = [
                 stepDurationMs: 180
             },
             {
+                type: "wait",
+                durationMs: 3000
+            },
+            {
                 type: "say",
                 actorId: "franco",
                 message: "¡Uy! ¿Dónde están mis anteojos?"
+            },
+            {
+                type: "showTitle",
+                text: "CONTINUARÁ"
             },
             {
                 type: "endScene"

@@ -1,6 +1,10 @@
 import { ActorCollection } from "../../../packages/engine/src/actor/ActorCollection";
 import { ActionSequenceCollection } from "../../../packages/engine/src/sequence/ActionSequenceCollection";
 import { ActionSequenceRunner } from "../../../packages/engine/src/sequence/ActionSequenceRunner";
+import { ActorSpeechController } from "../../../packages/engine/src/speech/ActorSpeechController";
+import { RenderLayer } from "../../../packages/engine/src/graphics/RenderLayer";
+import type { Renderer, TextOptions } from "../../../packages/engine/src/graphics/Renderer";
+import { ScreenTitle } from "../../../packages/engine/src/ui/ScreenTitle";
 import { demoActorsData } from "../src/data/demoActorsData";
 import { demoSequencesData } from "../src/data/demoSequencesData";
 
@@ -21,6 +25,8 @@ async function runTest(): Promise<void> {
     const sequences = new ActionSequenceCollection(demoSequencesData);
     const delays: number[] = [];
     const events: string[] = [];
+    const speechDelays: number[] = [];
+    const finalOrder: string[] = [];
     const actorStates: Array<{
         x: number;
         y: number;
@@ -30,6 +36,28 @@ async function runTest(): Promise<void> {
         flipped: boolean;
     }> = [];
     let sceneEnded = false;
+    let shownTitle: string | null = null;
+    let speech: ActorSpeechController;
+
+    speech = new ActorSpeechController(
+        actors,
+        () => {
+            if (speech.current) {
+                const actor = actors.getById(speech.current.actorId);
+
+                events.push(`say:${actor.name}:${speech.current.text}`);
+
+                if (speech.current.text === "¡Uy! ¿Dónde están mis anteojos?") {
+                    finalOrder.push("speech-final");
+                }
+            }
+        },
+        {},
+        (durationMs) => {
+            speechDelays.push(durationMs);
+            return Promise.resolve();
+        }
+    );
 
     const runner = new ActionSequenceRunner(
         sequences,
@@ -44,17 +72,44 @@ async function runTest(): Promise<void> {
                     facing: actor.facing,
                     flipped: actor.flipHorizontal
                 });
+
+                if (
+                    actor.x === 736 &&
+                    actor.currentAnimation === "idle"
+                ) {
+                    finalOrder.push("moveBySteps(5):idle");
+                }
             },
-            onSay: (actor, message) => {
-                events.push(`say:${actor.name}:${message}`);
+            onSay: (actor, message) =>
+                speech.say(actor.id, message),
+            onShowTitle: (text) => {
+                assert(
+                    !speech.isSpeaking,
+                    "The final speech should finish before showing the title"
+                );
+                shownTitle = text;
+                finalOrder.push(`showTitle:${text}`);
             },
             onEndScene: () => {
                 sceneEnded = true;
                 events.push("end");
+                finalOrder.push("endScene");
             }
         },
         (durationMs) => {
             delays.push(durationMs);
+
+            const actor = actors.getById("franco");
+
+            if (durationMs === 3000 && actor.x === 736) {
+                assertEqual(
+                    actor.currentAnimation,
+                    "idle",
+                    "The final wait should begin after movement restores idle"
+                );
+                finalOrder.push("wait(3000)");
+            }
+
             return Promise.resolve();
         }
     );
@@ -75,10 +130,12 @@ async function runTest(): Promise<void> {
     await execution;
 
     assert(!runner.isRunning, "The runner should release its running state after the sequence");
+    assert(!speech.isSpeaking, "Sequence speech should clear before the next action");
     assert(sceneEnded, "The sequence should end the scene");
+    assertEqual(speechDelays.length, 2, "Both sequence say actions should use actor speech timing");
     assertEqual(
         delays.join(","),
-        "180,180,180,180,3000,180,180,180,180,180",
+        "180,180,180,180,3000,180,180,180,180,180,3000",
         "Unexpected sequence delays"
     );
     assertEqual(
@@ -89,6 +146,22 @@ async function runTest(): Promise<void> {
             "end"
         ].join("\n"),
         "The declarative actions should execute in order"
+    );
+    assertEqual(
+        finalOrder.join("\n"),
+        [
+            "moveBySteps(5):idle",
+            "wait(3000)",
+            "speech-final",
+            "showTitle:CONTINUARÁ",
+            "endScene"
+        ].join("\n"),
+        "The final sequence actions should execute in the requested order"
+    );
+    assertEqual(
+        shownTitle,
+        "CONTINUARÁ",
+        "The title should remain available after endScene"
     );
 
     const walkFrameIds = new Set(
@@ -113,7 +186,7 @@ async function runTest(): Promise<void> {
         actorStates.some(
             (state) =>
                 state.animation === "idle" &&
-                state.x === 440 &&
+                state.x === 536 &&
                 state.facing === "left"
         ),
         "moveTo should restore idle while preserving the left-facing direction"
@@ -128,12 +201,30 @@ async function runTest(): Promise<void> {
         "moveBySteps should walk right without flipping the source art"
     );
 
-    assertEqual(franco.x, 640, "Franco should finish five steps away from the stand");
-    assertEqual(franco.y, 338, "Franco should preserve his vertical position while walking away");
+    assertEqual(franco.x, 736, "Franco should finish five steps away from the stand");
+    assertEqual(franco.y, 610, "Franco should preserve his ground anchor while walking away");
     assertEqual(franco.currentAnimation, "idle", "Franco should return to idle after walking");
     assertEqual(franco.currentFrameAssetId, "franco-idle", "Idle should restore its declared asset");
     assertEqual(franco.facing, "right", "Franco should finish facing his movement direction");
     assert(!franco.flipHorizontal, "Rightward movement should restore the original art direction");
+
+    const titleDraws: TextOptions[] = [];
+    const titleRenderer = {
+        getSize: () => ({width: 1280, height: 720}),
+        drawText: (options: TextOptions) => {
+            titleDraws.push(options);
+        }
+    } as unknown as Renderer;
+
+    new ScreenTitle().draw(titleRenderer, "CONTINUARÁ");
+
+    assertEqual(titleDraws.length, 1, "ScreenTitle should draw one text element");
+    assertEqual(titleDraws[0]?.text, "CONTINUARÁ", "ScreenTitle should draw the supplied text");
+    assertEqual(titleDraws[0]?.x, 640, "ScreenTitle should center horizontally");
+    assertEqual(titleDraws[0]?.y, 360, "ScreenTitle should center vertically");
+    assertEqual(titleDraws[0]?.anchorX, 0.5, "ScreenTitle should use a centered horizontal anchor");
+    assertEqual(titleDraws[0]?.anchorY, 0.5, "ScreenTitle should use a centered vertical anchor");
+    assertEqual(titleDraws[0]?.layer, RenderLayer.Modal, "ScreenTitle should render on the top UI layer");
 
     console.log("Scripted sequence functional test passed.");
 }

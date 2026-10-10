@@ -41,9 +41,11 @@ export class InventoryPanel {
     public draw(
         renderer: Renderer,
         items: readonly InventoryItemData[],
-        assets?: AssetCatalog
+        assets?: AssetCatalog,
+        providedBounds?: Rectangle
     ): void {
-        const bounds = this.getBounds(renderer, items.length);
+        const bounds = providedBounds ?? this.getBounds(renderer, items.length);
+        const isEmbedded = providedBounds !== undefined;
 
         this.itemBounds = [];
 
@@ -56,35 +58,32 @@ export class InventoryPanel {
             layer: this.layer
         });
 
-        renderer.drawText({
-            text: "Inventario",
-            x: bounds.x + this.padding,
-            y: bounds.y + 12,
-            fontSize: 18,
-            color: "#c9efd3",
-            fontWeight: "bold",
-            layer: this.layer + 1
-        });
+        const itemAreaX = bounds.x + this.padding;
+        const itemAreaWidth = Math.max(0, bounds.width - this.padding * 2);
 
         if (items.length === 0) {
-            renderer.drawText({
-                text: "(vacío)",
-                x: bounds.x + this.padding,
-                y: bounds.y + 44,
-                fontSize: 16,
-                color: "#ffffff",
-                layer: this.layer + 1
-            });
-
             return;
         }
 
+        const itemWidth = Math.min(
+            180,
+            Math.max(80, itemAreaWidth / items.length - 6)
+        );
+
         for (const [index, item] of items.entries()) {
             const itemBounds: Rectangle = {
-                x: bounds.x + this.padding,
-                y: bounds.y + 40 + index * this.itemHeight,
-                width: bounds.width - this.padding * 2,
-                height: this.itemHeight - 4
+                x: isEmbedded
+                    ? itemAreaX + index * (itemWidth + 6)
+                    : itemAreaX,
+                y: isEmbedded
+                    ? bounds.y + 6
+                    : bounds.y + this.padding + index * this.itemHeight,
+                width: isEmbedded
+                    ? itemWidth
+                    : bounds.width - this.padding * 2,
+                height: isEmbedded
+                    ? bounds.height - 12
+                    : this.itemHeight - 4
             };
 
             this.itemBounds.push({
@@ -120,9 +119,12 @@ export class InventoryPanel {
             renderer.drawText({
                 text: item.icon && assets ? item.name : `• ${item.name}`,
                 x: textX,
-                y: itemBounds.y + (itemBounds.height - 16) / 2,
+                y: isEmbedded
+                    ? itemBounds.y + itemBounds.height / 2
+                    : itemBounds.y + (itemBounds.height - 16) / 2,
                 fontSize: 16,
                 color: "#ffffff",
+                anchorY: isEmbedded ? 0.5 : undefined,
                 layer: this.layer + 2
             });
         }
@@ -147,7 +149,7 @@ export class InventoryPanel {
             x: rendererSize.width - this.width - 20,
             y: 20,
             width: this.width,
-            height: 60 + visibleItemCount * this.itemHeight
+            height: this.padding * 2 + visibleItemCount * this.itemHeight
         };
     }
 }

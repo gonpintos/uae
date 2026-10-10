@@ -94,13 +94,25 @@ export class PixiRenderer implements Renderer {
             text: options.text,
             style: {
                 fill: options.color ?? "#ffffff",
+                stroke: options.strokeColor && (options.strokeWidth ?? 0) > 0
+                    ? {
+                        color: options.strokeColor,
+                        width: options.strokeWidth ?? 1
+                    }
+                    : undefined,
                 fontFamily: "monospace",
                 fontSize: options.fontSize ?? 18,
+                lineHeight: options.lineHeight,
+                align: options.align ?? "left",
                 fontWeight:
                     options.fontWeight ?? "normal"
             }
         });
 
+        text.anchor.set(
+            options.anchorX ?? 0,
+            options.anchorY ?? 0
+        );
         text.position.set(options.x, options.y);
 
         text.zIndex = options.layer ?? 0;
@@ -198,6 +210,10 @@ export class PixiRenderer implements Renderer {
             width: this.logicalSize.width,
             height: this.logicalSize.height
         };
+    }
+
+    public getViewportScale(): number {
+        return this.viewportScale;
     }
 
     public getInputTarget(): HTMLElement {

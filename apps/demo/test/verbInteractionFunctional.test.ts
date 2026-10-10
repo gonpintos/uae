@@ -40,7 +40,8 @@ const executor = new InteractionExecutor(
 const standLook = executor.execute("look", "sunglasses-stand");
 
 assert(
-    standLook.type === "message" &&
+    standLook.type === "say" &&
+        standLook.actorId === "franco" &&
         standLook.message === "¡Uh, acá venden anteojos!\n75 coronas danesas.",
     "Looking at the stand should show its scene response."
 );
@@ -53,11 +54,11 @@ const gonLook = executor.execute("look", "gon");
 const fedeLook = executor.execute("look", "fede");
 
 assert(
-    gonLook.type === "message" && gonLook.message === "Muy hello-hello...",
+    gonLook.type === "say" && gonLook.message === "Muy hello-hello...",
     "Looking at Gon should show his scene response."
 );
 assert(
-    fedeLook.type === "message" && fedeLook.message === "Nada que decir.",
+    fedeLook.type === "say" && fedeLook.message === "Nada que decir.",
     "Looking at Fede should show his scene response."
 );
 
@@ -66,7 +67,7 @@ inventory.add("calculator");
 const calculatorLook = executor.execute("look", "calculator");
 
 assert(
-    calculatorLook.type === "message" &&
+    calculatorLook.type === "say" &&
         calculatorLook.message === "¡La mágica!",
     "Looking at the calculator should show its item response."
 );
@@ -88,7 +89,7 @@ assert(
 const standGoTo = executor.execute("goTo", "sunglasses-stand");
 
 assert(
-    standGoTo.type === "message" &&
+    standGoTo.type === "say" &&
         standGoTo.message === "Primero quiero saber cuánto salen en pesos.",
     "Going to the stand should show the temporary blocked response."
 );
@@ -111,7 +112,7 @@ const verbPanel = new VerbPanel();
 verbPanel.draw(renderer, "look");
 
 const selectedVerb = verbPanel.findVerbAt({
-    x: 220,
+    x: 390,
     y: 550
 });
 
@@ -136,7 +137,7 @@ const calculatorUse = executor.execute(
 );
 
 assert(
-    calculatorUse.type === "message" &&
+    calculatorUse.type === "say" &&
         calculatorUse.message === "No tengo la cotización de la corona danesa.",
     "Use plus calculator should execute its highest-priority conditional response."
 );

@@ -13,7 +13,8 @@ export const demoInteractionsData: readonly VerbInteractionData[] = [
             }
         ],
         interaction: {
-            type: "message",
+            type: "say",
+            actorId: "franco",
             message: "¡Ya puedo comprar los anteojos!"
         }
     },
@@ -29,7 +30,8 @@ export const demoInteractionsData: readonly VerbInteractionData[] = [
             }
         ],
         interaction: {
-            type: "message",
+            type: "say",
+            actorId: "franco",
             message: "¡Uh, acá venden anteojos!\n75 coronas danesas."
         },
         effects: [
@@ -49,7 +51,8 @@ export const demoInteractionsData: readonly VerbInteractionData[] = [
         verb: "look",
         targetId: "gon",
         interaction: {
-            type: "message",
+            type: "say",
+            actorId: "franco",
             message: "Muy hello-hello..."
         }
     },
@@ -57,7 +60,8 @@ export const demoInteractionsData: readonly VerbInteractionData[] = [
         verb: "look",
         targetId: "fede",
         interaction: {
-            type: "message",
+            type: "say",
+            actorId: "franco",
             message: "Nada que decir."
         }
     },
@@ -65,7 +69,8 @@ export const demoInteractionsData: readonly VerbInteractionData[] = [
         verb: "look",
         targetId: "calculator",
         interaction: {
-            type: "message",
+            type: "say",
+            actorId: "franco",
             message: "¡La mágica!"
         }
     },
@@ -81,7 +86,8 @@ export const demoInteractionsData: readonly VerbInteractionData[] = [
             }
         ],
         interaction: {
-            type: "message",
+            type: "say",
+            actorId: "franco",
             message: "No tengo la cotización de la corona danesa."
         }
     },
@@ -103,7 +109,8 @@ export const demoInteractionsData: readonly VerbInteractionData[] = [
             }
         ],
         interaction: {
-            type: "message",
+            type: "say",
+            actorId: "franco",
             message: "No tengo el precio de los anteojos."
         }
     },
@@ -125,8 +132,9 @@ export const demoInteractionsData: readonly VerbInteractionData[] = [
             }
         ],
         interaction: {
-            type: "message",
-            message: "10 pesos\nFranco: «¡Diez pesos! Están baratos. Me los compro.»"
+            type: "say",
+            actorId: "franco",
+            message: "¡Diez pesos! Están baratos. Me los compro."
         },
         effects: [
             {
@@ -164,7 +172,8 @@ export const demoInteractionsData: readonly VerbInteractionData[] = [
             }
         ],
         interaction: {
-            type: "message",
+            type: "say",
+            actorId: "franco",
             message: "Primero quiero saber cuánto salen en pesos."
         }
     },

@@ -6,6 +6,7 @@ import { Inventory } from "../../../packages/engine/src/inventory/Inventory";
 import { InventoryItemCatalog } from "../../../packages/engine/src/inventory/InventoryItemCatalog";
 import { GameState } from "../../../packages/engine/src/state/GameState";
 import { DialoguePanel } from "../../../packages/engine/src/ui/DialoguePanel";
+import { GameLayout } from "../../../packages/engine/src/ui/GameLayout";
 import { InventoryPanel } from "../../../packages/engine/src/ui/InventoryPanel";
 import { demoDialoguesData } from "../src/data/demoDialoguesData";
 import { demoItemsData } from "../src/data/demoItemsData";
@@ -88,7 +89,16 @@ assert(
     "The calculator usage question should initially be hidden."
 );
 
-panel.draw(renderer, panel.getBounds(renderer), initialFedeView);
+const dialogueBounds = panel.getBounds(renderer);
+const interfaceBounds = new GameLayout({interfaceHeight: 110})
+    .getInterfaceBounds(renderer);
+
+assert(
+    JSON.stringify(dialogueBounds) === JSON.stringify(interfaceBounds),
+    "DialoguePanel and ClassicAdventureUI should use the same fixed bounds."
+);
+
+panel.draw(renderer, dialogueBounds, initialFedeView);
 
 assert(
     drawnLayers.every((layer) => layer >= RenderLayer.Modal),
@@ -97,7 +107,7 @@ assert(
 
 const clickedFedeOption = panel.findOptionAt({
     x: 100,
-    y: 530
+    y: 680
 });
 
 assert(
@@ -127,7 +137,7 @@ panel.draw(renderer, panel.getBounds(renderer), repeatedFedeView);
 
 const clickedFedeExit = panel.findOptionAt({
     x: 100,
-    y: 640
+    y: 705
 });
 
 const fedeExit = session.selectOption(clickedFedeExit ?? "");
@@ -147,7 +157,7 @@ panel.draw(renderer, panel.getBounds(renderer), calculatorFedeView);
 
 const clickedCalculatorOption = panel.findOptionAt({
     x: 100,
-    y: 490
+    y: 650
 });
 
 const calculatorResponse = session.selectOption(
@@ -215,6 +225,23 @@ assert(
     "The calculator usage question should appear after receiving it."
 );
 
+const calculatorUsageResponse = reopenedSession.selectOption(
+    "ask-how-to-use-calculator"
+);
+
+assert(
+    !calculatorUsageResponse.ended,
+    "The calculator usage answer should keep Fede's dialogue open."
+);
+assert(
+    calculatorUsageResponse.turn.npcLine === "Usá la picardía.",
+    "Fede should give the declared calculator advice."
+);
+assert(
+    reopenedSession.view !== null,
+    "Fede's option menu should return after the calculator advice."
+);
+
 reopenedSession.selectOption("leave");
 
 assert(
@@ -234,7 +261,7 @@ panel.draw(renderer, panel.getBounds(renderer), initialGonView);
 
 const clickedGonOption = panel.findOptionAt({
     x: 100,
-    y: 490
+    y: 650
 });
 
 const gonResponse = session.selectOption(clickedGonOption ?? "");

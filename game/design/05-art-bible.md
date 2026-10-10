@@ -36,3 +36,13 @@ Escena: `los-anteojos-de-franco`
 - Punto de apoyo de los pies consistente.
 - No hay todavía animaciones frontal/trasera.
 - No hay audio.
+
+## Franco — consistencia visual
+
+Pendiente:
+- unificar grosor de línea entre `idle` y `walk`.
+
+Criterio:
+- el grosor de contorno debe ser consistente en todos los frames;
+- `idle` y `walk` deben parecer parte del mismo set;
+- mantener mismo volumen, paleta y nivel de detalle.

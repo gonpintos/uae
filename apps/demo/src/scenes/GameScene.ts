@@ -2,29 +2,39 @@ import {
     ActionSequenceCollection,
     ActionSequenceRunner,
     ActorCollection,
+    ActorMovementController,
     ActorRenderer,
+    ActorSpeechController,
+    ActorSpeechRenderer,
+    ClassicAdventureUI,
     containsPoint,
     DialogueCollection,
     DialoguePanel,
+    DialoguePresenter,
     DialogueSession,
+    GameCursor,
     GameLayout,
     HotspotDebugRenderer,
-    InventoryPanel,
+    InteractionFacingController,
     InteractionExecutor,
-    MessageBox,
+    InteractionPresenter,
+    NavigationController,
     RoomCollection,
     RoomManager,
     RoomVisualRenderer,
+    ScreenTitle,
+    VerbController,
     VerbInteractionCollection,
-    VerbPanel,
     type ActionSequenceData,
     type ActorData,
     type DialogueData,
+    type DialogueSelectionResult,
+    type Hotspot,
     type InteractionResult,
+    type Point,
     type RoomData,
     type Scene,
     type SceneContext,
-    type VerbId,
     type VerbInteractionData
 } from "@uae/engine";
 
@@ -32,6 +42,14 @@ export class GameScene implements Scene {
     private readonly actors: ActorCollection;
 
     private readonly actorRenderer = new ActorRenderer();
+
+    private readonly actorSpeechRenderer = new ActorSpeechRenderer();
+
+    private actorSpeech: ActorSpeechController | null = null;
+
+    private actorMovement: ActorMovementController | null = null;
+
+    private navigation: NavigationController | null = null;
 
     private readonly sequences: ActionSequenceCollection;
 
@@ -43,31 +61,45 @@ export class GameScene implements Scene {
 
     private interactionExecutor: InteractionExecutor | null = null;
 
+    private interactionPresenter: InteractionPresenter | null = null;
+
     private readonly dialogues: DialogueCollection;
 
     private dialogueSession: DialogueSession | null = null;
+
+    private dialoguePresenter: DialoguePresenter | null = null;
 
     private readonly dialoguePanel = new DialoguePanel();
 
     private readonly hotspotDebugRenderer = new HotspotDebugRenderer();
 
-    private readonly inventoryPanel = new InventoryPanel();
+    private readonly adventureUI = new ClassicAdventureUI();
 
-    private readonly verbPanel = new VerbPanel();
+    private readonly cursorRenderer = new GameCursor();
 
-    private readonly layout = new GameLayout({messageBoxHeight: 110});
+    private readonly layout = new GameLayout({interfaceHeight: 110});
 
     private readonly roomVisualRenderer = new RoomVisualRenderer();
 
-    private readonly messageBox = new MessageBox();
+    private readonly screenTitleRenderer = new ScreenTitle();
 
-    private message = "Click an interactive area";
+    private screenTitle: string | null = null;
 
-    private selectedVerb: VerbId = "look";
+    private message = "";
+
+    private hoveredTargetName: string | null = null;
+
+    private cursorPosition: Point | null = null;
+
+    private readonly verbController = new VerbController();
 
     private sceneEnded = false;
 
+    private readonly controlledActorId: string;
+
     private unsubscribePointerDown: (() => void) | null = null;
+
+    private unsubscribePointerMove: (() => void) | null = null;
 
     public constructor(
         roomsData: RoomData[],
@@ -75,7 +107,8 @@ export class GameScene implements Scene {
         dialoguesData: readonly DialogueData[],
         interactionsData: readonly VerbInteractionData[],
         actorsData: readonly ActorData[],
-        sequencesData: readonly ActionSequenceData[]
+        sequencesData: readonly ActionSequenceData[],
+        controlledActorId: string
     ) {
         const rooms = new RoomCollection(roomsData);
 
@@ -84,6 +117,7 @@ export class GameScene implements Scene {
         this.interactions = new VerbInteractionCollection(interactionsData);
         this.actors = new ActorCollection(actorsData);
         this.sequences = new ActionSequenceCollection(sequencesData);
+        this.controlledActorId = controlledActorId;
     }
 
     public enter(context: SceneContext): void {
@@ -99,6 +133,43 @@ export class GameScene implements Scene {
             context.inventory
         );
         this.sceneEnded = false;
+        this.screenTitle = null;
+        this.message = "";
+        this.hoveredTargetName = null;
+        this.cursorPosition = null;
+        this.verbController.completeAction();
+        this.actorSpeech = new ActorSpeechController(
+            this.actors,
+            () => {
+                this.drawScreen(context);
+            }
+        );
+        this.dialoguePresenter = new DialoguePresenter(
+            this.actorSpeech,
+            () => {
+                this.drawScreen(context);
+            }
+        );
+        this.actorMovement = new ActorMovementController(
+            this.actors,
+            () => {
+                this.drawScreen(context);
+            }
+        );
+        const interactionFacing = new InteractionFacingController(
+            this.actors,
+            () => {
+                this.drawScreen(context);
+            }
+        );
+        this.interactionPresenter = new InteractionPresenter(
+            this.getActorSpeech()
+        );
+        this.navigation = new NavigationController(
+            this.roomManager,
+            this.actorMovement,
+            interactionFacing
+        );
         this.sequenceRunner = new ActionSequenceRunner(
             this.sequences,
             this.actors,
@@ -106,24 +177,40 @@ export class GameScene implements Scene {
                 onActorMoved: () => {
                     this.drawScreen(context);
                 },
-                onSay: (actor, message) => {
-                    this.message = `${actor.name}: «${message}»`;
+                onSay: (actor, message) =>
+                    this.getActorSpeech().say(actor.id, message),
+                onShowTitle: (text) => {
+                    this.screenTitle = text;
                     this.drawScreen(context);
                 },
                 onEndScene: () => {
                     this.sceneEnded = true;
                     this.drawScreen(context);
                 }
-            }
+            },
+            undefined,
+            this.actorMovement
         );
 
         this.drawScreen(context);
+
+        this.unsubscribePointerMove =
+            context.input.onPointerMove((logicalPosition) => {
+                this.cursorPosition = logicalPosition;
+                this.hoveredTargetName = logicalPosition
+                    ? this.findHoveredTargetName(logicalPosition, context)
+                    : null;
+                this.drawScreen(context);
+            });
 
         this.unsubscribePointerDown =
             context.input.onPointerDown((logicalPosition) => {
                 if (
                     this.sceneEnded ||
-                    this.getSequenceRunner().isRunning
+                    this.getSequenceRunner().isRunning ||
+                    this.getNavigationController().isNavigating ||
+                    this.getDialoguePresenter().isPresenting ||
+                    this.getActorSpeech().isSpeaking
                 ) {
                     return;
                 }
@@ -144,46 +231,42 @@ export class GameScene implements Scene {
                         optionId
                     );
 
-                    if (selection.ended) {
-                        const completedLines = [
-                            `${dialogueView.player.name}: «${selection.turn.playerLine}»`,
-                            selection.turn.npcLine
-                                ? `${dialogueView.npc.name}: «${selection.turn.npcLine}»`
-                                : null,
-                            selection.turn.playerClosingLine
-                                ? `${dialogueView.player.name}: «${selection.turn.playerClosingLine}»`
-                                : null
-                        ].filter((line): line is string => line !== null);
-
-                        this.message = completedLines.join("\n");
-                    }
-
-                    this.drawScreen(context);
+                    void this.presentDialogueSelection(
+                        selection,
+                        dialogueView.player.id,
+                        dialogueView.npc.id,
+                        context
+                    );
                     return;
                 }
 
-                const selectedVerb = this.verbPanel.findVerbAt(
+                const selectedVerb = this.adventureUI.findVerbAt(
                     logicalPosition
                 );
 
                 if (selectedVerb) {
-                    this.selectedVerb = selectedVerb;
+                    this.verbController.select(selectedVerb);
+                    this.message = "";
                     this.drawScreen(context);
                     return;
                 }
 
-                const inventoryItemId = this.inventoryPanel.findItemAt(
+                const inventoryItemId = this.adventureUI.findItemAt(
                     logicalPosition
                 );
 
                 if (inventoryItemId) {
                     const result = this.getInteractionExecutor().execute(
-                        this.selectedVerb,
+                        this.verbController.selectedVerb,
                         inventoryItemId
                     );
 
                     this.applyInteractionResult(result, context);
                     this.drawScreen(context);
+                    return;
+                }
+
+                if (this.adventureUI.contains(logicalPosition)) {
                     return;
                 }
 
@@ -196,29 +279,45 @@ export class GameScene implements Scene {
                 const hotspot = this.roomManager.currentRoom.hotspots.findAt(logicalPosition);
   
                 if (!hotspot) {
+                    if (
+                        this.verbController.selectedVerb ===
+                        this.verbController.defaultVerbId
+                    ) {
+                        void this.walkToPoint(
+                            logicalPosition,
+                            context
+                        );
+                        return;
+                    }
+
                     this.message = `Nothing here: x=${Math.round(logicalPosition.x)}, y=${Math.round(logicalPosition.y)}`;
+                    this.verbController.completeAction();
 
                     this.drawScreen(context);
                     return;
                 }
 
-                const result = this.getInteractionExecutor().execute(
-                    this.selectedVerb,
-                    hotspot.id
-                );
-
-                this.applyInteractionResult(result, context);
-                this.drawScreen(context);
+                void this.walkToTarget(hotspot, context);
             });
     }
 
     public exit(context: SceneContext): void {
         this.unsubscribePointerDown?.();
         this.unsubscribePointerDown = null;
+        this.unsubscribePointerMove?.();
+        this.unsubscribePointerMove = null;
         this.dialogueSession = null;
         this.interactionExecutor = null;
+        this.interactionPresenter = null;
+        this.dialoguePresenter?.cancel();
+        this.dialoguePresenter = null;
+        this.actorSpeech?.cancel();
+        this.actorSpeech = null;
+        this.navigation?.cancel();
+        this.navigation = null;
         this.sequenceRunner?.cancel();
         this.sequenceRunner = null;
+        this.actorMovement = null;
 
         context.renderer.clear();
     }
@@ -228,7 +327,7 @@ export class GameScene implements Scene {
 
         const gameViewport = this.layout.getGameViewport(context.renderer);
 
-        const messageBoxBounds = this.layout.getMessageBoxBounds(context.renderer);
+        const interfaceBounds = this.layout.getInterfaceBounds(context.renderer);
 
         context.renderer.drawRectangle({
             ...gameViewport,
@@ -252,6 +351,16 @@ export class GameScene implements Scene {
             context.assets
         );
 
+        const speech = this.getActorSpeech().current;
+
+        if (speech) {
+            this.actorSpeechRenderer.draw(
+                context.renderer,
+                speech,
+                this.actors
+            );
+        }
+
         if (
             context.config.debug.enabled &&
             context.config.debug.showHotspots
@@ -262,35 +371,45 @@ export class GameScene implements Scene {
             );
         }
 
-        this.messageBox.draw(
-            context.renderer,
-            messageBoxBounds,
-            this.message
-        );
+        const dialogueView = this.getDialogueSession().view;
+        const dialoguePresenting = this.getDialoguePresenter().isPresenting;
 
-        if (
-            !this.sceneEnded &&
-            !this.getSequenceRunner().isRunning
-        ) {
-            this.inventoryPanel.draw(
+        if (dialogueView && !dialoguePresenting) {
+            this.dialoguePanel.draw(
                 context.renderer,
-                context.inventory.items,
-                context.assets
+                interfaceBounds,
+                dialogueView
             );
-
-            this.verbPanel.draw(
+        } else if (dialoguePresenting) {
+            this.adventureUI.drawBackground(
                 context.renderer,
-                this.selectedVerb
+                interfaceBounds
+            );
+        } else {
+            this.adventureUI.draw(
+                context.renderer,
+                interfaceBounds,
+                {
+                    selectedVerb: this.verbController.selectedVerb,
+                    targetName: this.hoveredTargetName,
+                    statusMessage: this.message,
+                    items: context.inventory.items
+                },
+                context.assets
             );
         }
 
-        const dialogueView = this.getDialogueSession().view;
-
-        if (dialogueView) {
-            this.dialoguePanel.draw(
+        if (this.screenTitle) {
+            this.screenTitleRenderer.draw(
                 context.renderer,
-                this.dialoguePanel.getBounds(context.renderer),
-                dialogueView
+                this.screenTitle
+            );
+        }
+
+        if (this.cursorPosition) {
+            this.cursorRenderer.draw(
+                context.renderer,
+                this.cursorPosition
             );
         }
 
@@ -310,7 +429,56 @@ export class GameScene implements Scene {
             return;
         }
 
+        if (result.type === "say") {
+            this.message = "";
+            this.hoveredTargetName = null;
+            void this.presentInteractionSpeech(result, context);
+            return;
+        }
+
         this.message = result.message;
+        this.hoveredTargetName = null;
+        this.verbController.completeAction();
+    }
+
+    private async presentInteractionSpeech(
+        result: Extract<InteractionResult, {type: "say"}>,
+        context: SceneContext
+    ): Promise<void> {
+        try {
+            await this.getInteractionPresenter().present(result);
+        } catch (error: unknown) {
+            console.error("Interaction speech failed.", error);
+            this.message = "No se pudo reproducir la respuesta.";
+        } finally {
+            this.verbController.completeAction();
+            this.drawScreen(context);
+        }
+    }
+
+    private findHoveredTargetName(
+        position: Point,
+        context: SceneContext
+    ): string | null {
+        const inventoryItemId = this.adventureUI.findItemAt(position);
+
+        if (inventoryItemId) {
+            return context.inventory.items.find(
+                (item) => item.id === inventoryItemId
+            )?.name ?? null;
+        }
+
+        if (this.adventureUI.contains(position)) {
+            return null;
+        }
+
+        const gameViewport = this.layout.getGameViewport(context.renderer);
+
+        if (!containsPoint(gameViewport, position)) {
+            return null;
+        }
+
+        return this.roomManager.currentRoom.hotspots.findAt(position)?.name ?? null;
     }
 
     private async runSequence(
@@ -322,6 +490,86 @@ export class GameScene implements Scene {
         } catch (error: unknown) {
             console.error("Action sequence failed.", error);
             this.message = `Sequence failed: ${sequenceId}`;
+            this.drawScreen(context);
+        } finally {
+            this.verbController.completeAction();
+            this.drawScreen(context);
+        }
+    }
+
+    private async presentDialogueSelection(
+        selection: DialogueSelectionResult,
+        playerActorId: string,
+        npcActorId: string,
+        context: SceneContext
+    ): Promise<void> {
+        try {
+            await this.getDialoguePresenter().present(
+                selection,
+                {
+                    playerActorId,
+                    npcActorId
+                }
+            );
+        } catch (error: unknown) {
+            console.error("Dialogue presentation failed.", error);
+            this.message = "No se pudo reproducir el diálogo.";
+            this.drawScreen(context);
+        } finally {
+            if (selection.ended) {
+                this.verbController.completeAction();
+                this.drawScreen(context);
+            }
+        }
+    }
+
+    private async walkToPoint(
+        destination: {x: number; y: number},
+        context: SceneContext
+    ): Promise<void> {
+        try {
+            const arrived = await this.getNavigationController().walkToPoint(
+                this.controlledActorId,
+                destination
+            );
+
+            if (!arrived) {
+                this.message = "No puedo caminar hasta ahí.";
+                this.drawScreen(context);
+            }
+        } catch (error: unknown) {
+            console.error("Navigation failed.", error);
+            this.message = "No pude llegar hasta ahí.";
+            this.drawScreen(context);
+        }
+    }
+
+    private async walkToTarget(
+        hotspot: Hotspot,
+        context: SceneContext
+    ): Promise<void> {
+        try {
+            const arrived = await this.getNavigationController().walkToTarget(
+                this.controlledActorId,
+                hotspot,
+                () => {
+                    const result = this.getInteractionExecutor().execute(
+                        this.verbController.selectedVerb,
+                        hotspot.id
+                    );
+
+                    this.applyInteractionResult(result, context);
+                    this.drawScreen(context);
+                }
+            );
+
+            if (!arrived) {
+                this.message = "No puedo acercarme hasta ahí.";
+                this.drawScreen(context);
+            }
+        } catch (error: unknown) {
+            console.error("Target navigation failed.", error);
+            this.message = "No pude acercarme hasta ahí.";
             this.drawScreen(context);
         }
     }
@@ -342,12 +590,44 @@ export class GameScene implements Scene {
         return this.interactionExecutor;
     }
 
+    private getInteractionPresenter(): InteractionPresenter {
+        if (!this.interactionPresenter) {
+            throw new Error("GameScene must be entered before presenting interactions.");
+        }
+
+        return this.interactionPresenter;
+    }
+
     private getSequenceRunner(): ActionSequenceRunner {
         if (!this.sequenceRunner) {
             throw new Error("GameScene must be entered before using sequences.");
         }
 
         return this.sequenceRunner;
+    }
+
+    private getNavigationController(): NavigationController {
+        if (!this.navigation) {
+            throw new Error("GameScene must be entered before using navigation.");
+        }
+
+        return this.navigation;
+    }
+
+    private getActorSpeech(): ActorSpeechController {
+        if (!this.actorSpeech) {
+            throw new Error("GameScene must be entered before using actor speech.");
+        }
+
+        return this.actorSpeech;
+    }
+
+    private getDialoguePresenter(): DialoguePresenter {
+        if (!this.dialoguePresenter) {
+            throw new Error("GameScene must be entered before presenting dialogues.");
+        }
+
+        return this.dialoguePresenter;
     }
 
 }

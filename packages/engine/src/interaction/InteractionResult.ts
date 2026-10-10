@@ -5,6 +5,12 @@ export interface MessageInteractionResult {
     message: string;
 }
 
+export interface SayInteractionResult {
+    type: "say";
+    actorId: string;
+    message: string;
+}
+
 export interface ChangeRoomInteractionResult {
     type: "changeRoom";
     message: string;
@@ -35,6 +41,7 @@ export interface UnhandledInteractionResult {
 
 export type InteractionResult =
     | MessageInteractionResult
+    | SayInteractionResult
     | ChangeRoomInteractionResult
     | GoBackInteractionResult
     | StartDialogueInteractionResult

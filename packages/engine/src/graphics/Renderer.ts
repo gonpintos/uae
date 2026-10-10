@@ -5,8 +5,14 @@ export interface TextOptions {
     x: number;
     y: number;
     fontSize?: number;
+    lineHeight?: number;
     color?: string;
+    strokeColor?: string;
+    strokeWidth?: number;
     fontWeight?: "normal" | "bold";
+    align?: "left" | "center" | "right";
+    anchorX?: number;
+    anchorY?: number;
     
     layer?: number;
 }
@@ -66,6 +72,8 @@ export interface Renderer {
     drawImage(options: ImageOptions): void;
 
     getSize(): RendererSize;
+
+    getViewportScale?(): number;
 
     getInputTarget(): HTMLElement;
 

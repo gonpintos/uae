@@ -1,13 +1,18 @@
 import type { Actor } from "../actor/Actor";
 import type { ActorCollection } from "../actor/ActorCollection";
+import {
+    ActorMovementController,
+    type MovementDelay
+} from "../actor/ActorMovementController";
 import type { ActionSequenceCollection } from "./ActionSequenceCollection";
 import type { ActionSequenceStep } from "./ActionSequenceData";
 
-export type SequenceDelay = (durationMs: number) => Promise<void>;
+export type SequenceDelay = MovementDelay;
 
 export interface ActionSequenceCallbacks {
     onActorMoved(actor: Actor): void;
-    onSay(actor: Actor, message: string): void;
+    onSay(actor: Actor, message: string): void | Promise<void>;
+    onShowTitle(text: string): void;
     onEndScene(): void;
 }
 
@@ -25,6 +30,8 @@ export class ActionSequenceRunner {
 
     private readonly delay: SequenceDelay;
 
+    private readonly movement: ActorMovementController;
+
     private running = false;
 
     private cancelled = false;
@@ -33,12 +40,18 @@ export class ActionSequenceRunner {
         sequences: ActionSequenceCollection,
         actors: ActorCollection,
         callbacks: ActionSequenceCallbacks,
-        delay: SequenceDelay = browserDelay
+        delay: SequenceDelay = browserDelay,
+        movement?: ActorMovementController
     ) {
         this.sequences = sequences;
         this.actors = actors;
         this.callbacks = callbacks;
         this.delay = delay;
+        this.movement = movement ?? new ActorMovementController(
+            actors,
+            callbacks.onActorMoved,
+            delay
+        );
     }
 
     public get isRunning(): boolean {
@@ -74,6 +87,7 @@ export class ActionSequenceRunner {
 
     public cancel(): void {
         this.cancelled = true;
+        this.movement.cancel();
     }
 
     private async execute(action: ActionSequenceStep): Promise<boolean> {
@@ -85,157 +99,40 @@ export class ActionSequenceRunner {
             case "say": {
                 const actor = this.actors.getById(action.actorId);
 
-                this.callbacks.onSay(actor, action.message);
+                await this.callbacks.onSay(actor, action.message);
                 return true;
             }
 
             case "moveTo": {
-                const actor = this.actors.getById(action.actorId);
-
-                return this.moveTo(
-                    actor,
-                    action.x,
-                    action.y,
+                return this.movement.moveTo(
+                    action.actorId,
+                    {
+                        x: action.x,
+                        y: action.y
+                    },
                     action.durationMs ?? 0
                 );
             }
 
             case "moveBySteps": {
-                const actor = this.actors.getById(action.actorId);
-
-                return this.moveBySteps(
-                    actor,
+                return this.movement.moveBySteps(
+                    action.actorId,
                     action.steps,
-                    action.deltaX,
-                    action.deltaY,
+                    {
+                        x: action.deltaX,
+                        y: action.deltaY
+                    },
                     action.stepDurationMs ?? 0
                 );
             }
+
+            case "showTitle":
+                this.callbacks.onShowTitle(action.text);
+                return true;
 
             case "endScene":
                 this.callbacks.onEndScene();
                 return false;
         }
-    }
-
-    private async moveTo(
-        actor: Actor,
-        targetX: number,
-        targetY: number,
-        durationMs: number
-    ): Promise<boolean> {
-        const startX = actor.x;
-        const startY = actor.y;
-        const deltaX = targetX - startX;
-        const deltaY = targetY - startY;
-
-        actor.startMovement(deltaX);
-        this.callbacks.onActorMoved(actor);
-
-        try {
-            if (durationMs <= 0) {
-                actor.moveTo(targetX, targetY);
-                actor.advanceAnimationFrame();
-                this.callbacks.onActorMoved(actor);
-                return true;
-            }
-
-            let elapsedMs = 0;
-
-            while (elapsedMs < durationMs) {
-                const frameDurationMs =
-                    actor.currentFrameDurationMs ?? durationMs;
-                const tickDurationMs = Math.min(
-                    frameDurationMs,
-                    durationMs - elapsedMs
-                );
-
-                await this.delay(tickDurationMs);
-
-                if (this.cancelled) {
-                    return false;
-                }
-
-                elapsedMs += tickDurationMs;
-
-                const progress = elapsedMs / durationMs;
-
-                actor.moveTo(
-                    startX + deltaX * progress,
-                    startY + deltaY * progress
-                );
-                actor.advanceAnimationFrame();
-                this.callbacks.onActorMoved(actor);
-            }
-
-            return true;
-        } finally {
-            actor.stopMovement();
-            this.callbacks.onActorMoved(actor);
-        }
-    }
-
-    private async moveBySteps(
-        actor: Actor,
-        steps: number,
-        deltaX: number,
-        deltaY: number,
-        stepDurationMs: number
-    ): Promise<boolean> {
-        actor.startMovement(deltaX * steps);
-        this.callbacks.onActorMoved(actor);
-
-        try {
-            for (let step = 0; step < steps; step += 1) {
-                if (this.cancelled) {
-                    return false;
-                }
-
-                actor.moveBy(deltaX, deltaY);
-                this.callbacks.onActorMoved(actor);
-
-                const completedStep = await this.animateForDuration(
-                    actor,
-                    stepDurationMs
-                );
-
-                if (!completedStep) {
-                    return false;
-                }
-            }
-
-            return !this.cancelled;
-        } finally {
-            actor.stopMovement();
-            this.callbacks.onActorMoved(actor);
-        }
-    }
-
-    private async animateForDuration(
-        actor: Actor,
-        durationMs: number
-    ): Promise<boolean> {
-        let elapsedMs = 0;
-
-        while (elapsedMs < durationMs) {
-            const frameDurationMs =
-                actor.currentFrameDurationMs ?? durationMs;
-            const tickDurationMs = Math.min(
-                frameDurationMs,
-                durationMs - elapsedMs
-            );
-
-            await this.delay(tickDurationMs);
-
-            if (this.cancelled) {
-                return false;
-            }
-
-            elapsedMs += tickDurationMs;
-            actor.advanceAnimationFrame();
-            this.callbacks.onActorMoved(actor);
-        }
-
-        return true;
     }
 }

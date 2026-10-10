@@ -59,6 +59,13 @@ export class InteractionExecutor {
                     message: interaction.message
                 };
 
+            case "say":
+                return {
+                    type: "say",
+                    actorId: interaction.actorId,
+                    message: interaction.message
+                };
+
             case "changeRoom": {
                 const room =
                     this.roomManager.changeRoom(

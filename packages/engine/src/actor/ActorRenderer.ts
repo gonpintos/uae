@@ -1,6 +1,6 @@
 import type { AssetCatalog } from "../assets/AssetCatalog";
-import { RenderLayer } from "../graphics/RenderLayer";
 import type { Renderer } from "../graphics/Renderer";
+import { getWorldDepthLayer } from "../graphics/WorldDepth";
 import type { ActorCollection } from "./ActorCollection";
 
 export class ActorRenderer {
@@ -10,14 +10,16 @@ export class ActorRenderer {
         assets: AssetCatalog
     ): void {
         for (const actor of actors) {
-            const layer = actor.layer ?? RenderLayer.RoomObject + 20;
+            const layer = actor.layer ?? getWorldDepthLayer(actor.y);
             const frameAssetId = actor.currentFrameAssetId;
+            const renderX = actor.x - actor.width / 2;
+            const renderY = actor.y - actor.height;
 
             if (frameAssetId) {
                 renderer.drawImage({
                     source: assets.getSource(frameAssetId),
-                    x: actor.x,
-                    y: actor.y,
+                    x: renderX,
+                    y: renderY,
                     width: actor.width,
                     height: actor.height,
                     flipHorizontal: actor.flipHorizontal,
@@ -27,8 +29,8 @@ export class ActorRenderer {
             }
 
             renderer.drawRectangle({
-                x: actor.x,
-                y: actor.y,
+                x: renderX,
+                y: renderY,
                 width: actor.width,
                 height: actor.height,
                 color: actor.color,
@@ -38,11 +40,11 @@ export class ActorRenderer {
 
             renderer.drawText({
                 text: actor.name,
-                x: actor.x + 10,
-                y: actor.y + 10,
+                x: renderX + 10,
+                y: renderY + 10,
                 fontSize: 17,
                 color: "#ffffff",
-                layer: layer + 1
+                layer
             });
         }
     }

@@ -41,8 +41,12 @@ export class VerbPanel {
         this.layer = options.layer ?? RenderLayer.Interface;
     }
 
-    public draw(renderer: Renderer, selectedVerb: VerbId): void {
-        const bounds = this.getBounds(renderer);
+    public draw(
+        renderer: Renderer,
+        selectedVerb: VerbId,
+        providedBounds?: Rectangle
+    ): void {
+        const bounds = providedBounds ?? this.getBounds(renderer);
         const padding = 12;
         const gap = 8;
         const buttonWidth = (
@@ -86,11 +90,14 @@ export class VerbPanel {
 
             renderer.drawText({
                 text: verb.label,
-                x: buttonBounds.x + 12,
-                y: buttonBounds.y + 14,
+                x: buttonBounds.x + buttonBounds.width / 2,
+                y: buttonBounds.y + buttonBounds.height / 2,
                 fontSize: 17,
                 color: "#ffffff",
                 fontWeight: isSelected ? "bold" : "normal",
+                align: "center",
+                anchorX: 0.5,
+                anchorY: 0.5,
                 layer: this.layer + 2
             });
         }

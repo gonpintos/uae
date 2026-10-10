@@ -3,6 +3,12 @@ export interface MessageInteraction {
     message: string;
 }
 
+export interface SayInteraction {
+    type: "say";
+    actorId: string;
+    message: string;
+}
+
 export interface ChangeRoomInteraction {
     type: "changeRoom";
     roomId: string;
@@ -24,6 +30,7 @@ export interface TriggerActionInteraction {
 
 export type InteractionAction =
     | MessageInteraction
+    | SayInteraction
     | ChangeRoomInteraction
     | GoBackInteraction
     | StartDialogueInteraction

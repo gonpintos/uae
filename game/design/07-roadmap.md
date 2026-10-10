@@ -1,16 +1,11 @@
-# UAE Roadmap
+## Classic Adventure Feel
 
-## Vertical slice — Los anteojos de Franco
-
-- [x] Dialogue System v1
-- [x] Game State v1
-- [x] Dialogue Effects v1
-- [x] Inventory System v1
-- [x] Verb / Interaction System v1
-- [x] Puzzle Logic v1
-- [x] Scripted Sequence v1
-- [x] Actor abstraction v1
-- [ ] Arte definitivo de la escena
-- [ ] Integración de assets
-- [ ] Ajuste visual / posiciones
-- [ ] Playtest completo
+- [ ] Walk-to-click v1
+- [ ] Walk-to-target v1
+- [ ] Dialogue presentation v2
+- [ ] Player line shown above Franco
+- [ ] NPC line shown above NPC
+- [ ] Dialogue choices with spoken playback
+- [ ] Classic bottom UI layout
+- [ ] Fixed verbs + inventory bar
+- [ ] Monkey Island style pointer

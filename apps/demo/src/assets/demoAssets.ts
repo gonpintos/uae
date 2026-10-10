@@ -2,6 +2,7 @@ import type { AssetDefinitions } from "@uae/engine";
 
 export const demoAssets:
     AssetDefinitions = {
+        "intro-presentation": "/assets/intro/intro-presentacion.png",
         "copenhagen-street": "/assets/backgrounds/copenhagen-street.png",
         "sunglasses-stand": "/assets/objects/sunglasses-stand.png",
         "franco-idle": "/assets/actors/franco/idle.png",

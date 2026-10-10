@@ -30,11 +30,17 @@ export interface EndSceneSequenceAction {
     type: "endScene";
 }
 
+export interface ShowTitleSequenceAction {
+    type: "showTitle";
+    text: string;
+}
+
 export type ActionSequenceStep =
     | WaitSequenceAction
     | SaySequenceAction
     | MoveToSequenceAction
     | MoveByStepsSequenceAction
+    | ShowTitleSequenceAction
     | EndSceneSequenceAction;
 
 export interface ActionSequenceData {

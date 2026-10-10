@@ -16,7 +16,11 @@ export class Actor {
 
     public readonly height: number;
 
+    public readonly walkSpeedPixelsPerSecond: number;
+
     public readonly color: string;
+
+    public readonly speechColor: string | undefined;
 
     public readonly layer: number | undefined;
 
@@ -41,13 +45,23 @@ export class Actor {
         this.positionY = data.y;
         this.width = data.width;
         this.height = data.height;
+        this.walkSpeedPixelsPerSecond =
+            data.walkSpeedPixelsPerSecond ?? 240;
         this.color = data.color ?? "#47704f";
+        this.speechColor = data.speechColor;
         this.layer = data.layer;
         this.animations = data.animations;
         this.sourceFacing = data.animations?.sourceFacing ?? "right";
         this.facingDirection = data.initialFacing ?? this.sourceFacing;
 
         this.validateAnimations();
+
+        if (
+            !Number.isFinite(this.walkSpeedPixelsPerSecond) ||
+            this.walkSpeedPixelsPerSecond <= 0
+        ) {
+            throw new Error(`Actor "${this.id}" has an invalid walk speed.`);
+        }
     }
 
     public get x(): number {
@@ -88,6 +102,14 @@ export class Actor {
     public moveBy(deltaX: number, deltaY: number): void {
         this.positionX += deltaX;
         this.positionY += deltaY;
+    }
+
+    public faceToward(targetX: number): void {
+        if (targetX < this.positionX) {
+            this.facingDirection = "left";
+        } else if (targetX > this.positionX) {
+            this.facingDirection = "right";
+        }
     }
 
     public startMovement(deltaX: number): void {

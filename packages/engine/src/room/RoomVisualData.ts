@@ -14,5 +14,8 @@ export interface RoomVisualData {
     
     label?: string;
 
+    /** Ground-line depth used to sort this visual against actors. */
+    depthY?: number;
+
     layer?: number;
 }

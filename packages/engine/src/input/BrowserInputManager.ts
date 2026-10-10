@@ -1,6 +1,7 @@
 import type {
     InputManager,
     PointerDownHandler,
+    PointerMoveHandler,
     PointerPositionMapper
 } from "./InputManager";
 
@@ -18,6 +19,7 @@ export class BrowserInputManager
     ): void {
         this.target = target;
         this.positionMapper = positionMapper;
+        this.target.style.cursor = "none";
     }
 
     public onPointerDown(
@@ -63,7 +65,41 @@ export class BrowserInputManager
         };
     }
 
+    public onPointerMove(
+        handler: PointerMoveHandler
+    ): () => void {
+        if (!this.target || !this.positionMapper) {
+            throw new Error(
+                "InputManager must be initialized before use."
+            );
+        }
+
+        const target = this.target;
+        const positionMapper = this.positionMapper;
+        const moveListener = (event: PointerEvent): void => {
+            handler(positionMapper({
+                x: event.clientX,
+                y: event.clientY
+            }));
+        };
+        const leaveListener = (): void => {
+            handler(null);
+        };
+
+        target.addEventListener("pointermove", moveListener);
+        target.addEventListener("pointerleave", leaveListener);
+
+        return () => {
+            target.removeEventListener("pointermove", moveListener);
+            target.removeEventListener("pointerleave", leaveListener);
+        };
+    }
+
     public destroy(): void {
+        if (this.target) {
+            this.target.style.cursor = "";
+        }
+
         this.target = null;
         this.positionMapper = null;
     }

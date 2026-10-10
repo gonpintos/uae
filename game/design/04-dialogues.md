@@ -54,7 +54,7 @@ Franco:
 
 Respuesta de Fede:
 
-**Pendiente de definir.**
+> «Usá la picardía.»
 
 Después vuelve el menú.
 
