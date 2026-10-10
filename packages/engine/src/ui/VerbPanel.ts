@@ -16,6 +16,7 @@ export interface VerbPanelOptions {
     width?: number;
     height?: number;
     layer?: number;
+    columns?: number;
 }
 
 interface VerbBounds {
@@ -32,6 +33,8 @@ export class VerbPanel {
 
     private readonly layer: number;
 
+    private readonly columns: number;
+
     private verbBounds: VerbBounds[] = [];
 
     public constructor(options: VerbPanelOptions = {}) {
@@ -39,6 +42,7 @@ export class VerbPanel {
         this.width = options.width ?? 700;
         this.height = options.height ?? 76;
         this.layer = options.layer ?? RenderLayer.Interface;
+        this.columns = Math.max(1, Math.floor(options.columns ?? 2));
     }
 
     public draw(
@@ -47,11 +51,16 @@ export class VerbPanel {
         providedBounds?: Rectangle
     ): void {
         const bounds = providedBounds ?? this.getBounds(renderer);
-        const padding = 12;
+        const padding = 10;
         const gap = 8;
+        const columns = Math.min(this.columns, Math.max(1, this.verbs.length));
+        const rows = Math.max(1, Math.ceil(this.verbs.length / columns));
         const buttonWidth = (
-            bounds.width - padding * 2 - gap * (this.verbs.length - 1)
-        ) / this.verbs.length;
+            bounds.width - padding * 2 - gap * (columns - 1)
+        ) / columns;
+        const buttonHeight = (
+            bounds.height - padding * 2 - gap * (rows - 1)
+        ) / rows;
 
         this.verbBounds = [];
 
@@ -65,11 +74,13 @@ export class VerbPanel {
         });
 
         for (const [index, verb] of this.verbs.entries()) {
+            const column = index % columns;
+            const row = Math.floor(index / columns);
             const buttonBounds: Rectangle = {
-                x: bounds.x + padding + index * (buttonWidth + gap),
-                y: bounds.y + 12,
+                x: bounds.x + padding + column * (buttonWidth + gap),
+                y: bounds.y + padding + row * (buttonHeight + gap),
                 width: buttonWidth,
-                height: bounds.height - 24
+                height: buttonHeight
             };
 
             this.verbBounds.push({

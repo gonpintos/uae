@@ -6,6 +6,7 @@ import {
     containsPoint,
     type Rectangle
 } from "../interaction/Rectangle";
+import { DEFAULT_INTERFACE_HEIGHT } from "./GameLayout";
 
 export interface DialoguePanelOptions {
     height?: number;
@@ -34,7 +35,7 @@ export class DialoguePanel {
     private optionBounds: DialogueOptionBounds[] = [];
 
     public constructor(options: DialoguePanelOptions = {}) {
-        this.height = options.height ?? 110;
+        this.height = options.height ?? DEFAULT_INTERFACE_HEIGHT;
         this.padding = options.padding ?? 12;
         this.optionHeight = options.optionHeight ?? 24;
         this.optionGap = options.optionGap ?? 2;

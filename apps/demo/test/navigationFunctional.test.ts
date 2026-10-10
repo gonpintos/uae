@@ -9,6 +9,12 @@ import { VerbInteractionCollection } from "../../../packages/engine/src/interact
 import { Inventory } from "../../../packages/engine/src/inventory/Inventory";
 import { InventoryItemCatalog } from "../../../packages/engine/src/inventory/InventoryItemCatalog";
 import { NavigationController } from "../../../packages/engine/src/navigation/NavigationController";
+import { NavigationDebugRenderer } from "../../../packages/engine/src/debug/NavigationDebugRenderer";
+import type {
+    LineOptions,
+    Renderer,
+    TextOptions
+} from "../../../packages/engine/src/graphics/Renderer";
 import { RoomCollection } from "../../../packages/engine/src/room/RoomCollection";
 import { RoomManager } from "../../../packages/engine/src/room/RoomManager";
 import { GameState } from "../../../packages/engine/src/state/GameState";
@@ -16,6 +22,10 @@ import { demoActorsData } from "../src/data/demoActorsData";
 import { demoDialoguesData } from "../src/data/demoDialoguesData";
 import { demoInteractionsData } from "../src/data/demoInteractionsData";
 import { demoItemsData } from "../src/data/demoItemsData";
+import {
+    demoInteractionPositions,
+    demoWalkableArea
+} from "../src/data/demoRoomGeometry";
 
 function assert(condition: boolean, message: string): void {
     if (!condition) {
@@ -57,28 +67,26 @@ async function runTest(): Promise<void> {
         {
             id: "navigation-room",
             name: "Navigation Room",
-            visuals: [],
-            walkableArea: {
-                type: "polygon",
-                points: [
-                    {x: 20, y: 510},
-                    {x: 1220, y: 470},
-                    {x: 1220, y: 610},
-                    {x: 20, y: 610}
-                ]
-            },
+            visuals: [
+                {
+                    id: "depth-object",
+                    x: 40,
+                    y: 266,
+                    width: 440,
+                    height: 264,
+                    depthY: 527
+                }
+            ],
+            walkableArea: demoWalkableArea,
             hotspots: [
                 {
                     id: "fede",
                     actorId: "fede",
                     x: 800,
-                    y: 338,
+                    y: 253,
                     width: 150,
                     height: 272,
-                    interactionPosition: {
-                        x: 740,
-                        y: 610
-                    }
+                    interactionPosition: demoInteractionPositions.fede
                 }
             ]
         }
@@ -150,7 +158,7 @@ async function runTest(): Promise<void> {
 
     const blockedRequest = await navigation.walkToPoint(
         "franco",
-        {x: 600, y: 580}
+        {x: 600, y: 520}
     );
 
     assert(!blockedRequest, "A second navigation request should be blocked while walking");
@@ -181,7 +189,7 @@ async function runTest(): Promise<void> {
 
     const angledOutsideAccepted = await navigation.walkToPoint(
         "franco",
-        {x: 30, y: 480}
+        {x: 30, y: 500}
     );
 
     assert(
@@ -192,7 +200,7 @@ async function runTest(): Promise<void> {
     const beforeOutsideClick = {x: franco.x, y: franco.y};
     const outsideAccepted = await navigation.walkToPoint(
         "franco",
-        {x: 500, y: 400}
+        {x: 500, y: 450}
     );
 
     assert(!outsideAccepted, "A point outside the walkable area should be rejected");
@@ -201,12 +209,12 @@ async function runTest(): Promise<void> {
 
     const floorAccepted = await navigation.walkToPoint(
         "franco",
-        {x: 500, y: 580}
+        {x: 500, y: 520}
     );
 
     assert(floorAccepted, "goTo + walkable point should start navigation");
     assertEqual(franco.x, 500, "Walk-to-click should finish at the clicked x anchor");
-    assertEqual(franco.y, 580, "Walk-to-click should finish at the clicked ground anchor");
+    assertEqual(franco.y, 520, "Walk-to-click should finish at the clicked ground anchor");
     assertEqual(franco.currentAnimation, "idle", "Walk-to-click should finish idle");
     assertEqual(franco.facing, "left", "Walking to a point on the left should update direction");
     assert(franco.flipHorizontal, "Leftward walking should flip the right-facing art");
@@ -260,6 +268,31 @@ async function runTest(): Promise<void> {
         reverseActors.getById("npc").facing,
         "right",
         "The NPC should face right when the controlled actor is to its right"
+    );
+
+    const debugLines: LineOptions[] = [];
+    const debugTexts: TextOptions[] = [];
+    const debugRenderer = {
+        drawLine: (options: LineOptions) => debugLines.push(options),
+        drawText: (options: TextOptions) => debugTexts.push(options)
+    } as unknown as Renderer;
+
+    new NavigationDebugRenderer().draw(
+        debugRenderer,
+        roomManager.currentRoom,
+        actors,
+        "franco"
+    );
+
+    assert(
+        debugLines.length >= demoWalkableArea.points.length + 5,
+        "Explicit navigation debug should draw polygon, anchor, interaction and depth lines"
+    );
+    assert(
+        debugTexts.some((entry) => entry.text.includes("[anchor] franco")) &&
+            debugTexts.some((entry) => entry.text.includes("[interaction] fede")) &&
+            debugTexts.some((entry) => entry.text.includes("[depthY 527]")),
+        "Navigation debug should label generic scene geometry"
     );
 
     console.log("Navigation functional test passed.");

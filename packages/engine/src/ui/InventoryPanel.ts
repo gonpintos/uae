@@ -45,7 +45,7 @@ export class InventoryPanel {
         providedBounds?: Rectangle
     ): void {
         const bounds = providedBounds ?? this.getBounds(renderer, items.length);
-        const isEmbedded = providedBounds !== undefined;
+        const gap = 8;
 
         this.itemBounds = [];
 
@@ -65,25 +65,20 @@ export class InventoryPanel {
             return;
         }
 
-        const itemWidth = Math.min(
-            180,
-            Math.max(80, itemAreaWidth / items.length - 6)
+        const itemSize = this.itemHeight;
+        const columns = Math.max(
+            1,
+            Math.floor((itemAreaWidth + gap) / (itemSize + gap))
         );
 
         for (const [index, item] of items.entries()) {
+            const column = index % columns;
+            const row = Math.floor(index / columns);
             const itemBounds: Rectangle = {
-                x: isEmbedded
-                    ? itemAreaX + index * (itemWidth + 6)
-                    : itemAreaX,
-                y: isEmbedded
-                    ? bounds.y + 6
-                    : bounds.y + this.padding + index * this.itemHeight,
-                width: isEmbedded
-                    ? itemWidth
-                    : bounds.width - this.padding * 2,
-                height: isEmbedded
-                    ? bounds.height - 12
-                    : this.itemHeight - 4
+                x: itemAreaX + column * (itemSize + gap),
+                y: bounds.y + this.padding + row * (itemSize + gap),
+                width: itemSize,
+                height: itemSize
             };
 
             this.itemBounds.push({
@@ -98,35 +93,21 @@ export class InventoryPanel {
                 layer: this.layer + 1
             });
 
-            let textX = itemBounds.x + 6;
-
             if (item.icon && assets) {
                 const iconY = itemBounds.y +
                     (itemBounds.height - item.icon.height) / 2;
+                const iconX = itemBounds.x +
+                    (itemBounds.width - item.icon.width) / 2;
 
                 renderer.drawImage({
                     source: assets.getSource(item.icon.assetId),
-                    x: itemBounds.x + 8,
+                    x: iconX,
                     y: iconY,
                     width: item.icon.width,
                     height: item.icon.height,
                     layer: this.layer + 2
                 });
-
-                textX += item.icon.width + 12;
             }
-
-            renderer.drawText({
-                text: item.icon && assets ? item.name : `• ${item.name}`,
-                x: textX,
-                y: isEmbedded
-                    ? itemBounds.y + itemBounds.height / 2
-                    : itemBounds.y + (itemBounds.height - 16) / 2,
-                fontSize: 16,
-                color: "#ffffff",
-                anchorY: isEmbedded ? 0.5 : undefined,
-                layer: this.layer + 2
-            });
         }
     }
 
@@ -143,13 +124,20 @@ export class InventoryPanel {
         itemCount: number
     ): Rectangle {
         const rendererSize = renderer.getSize();
-        const visibleItemCount = Math.max(itemCount, 1);
+        const itemAreaWidth = this.width - this.padding * 2;
+        const columns = Math.max(
+            1,
+            Math.floor((itemAreaWidth + 8) / (this.itemHeight + 8))
+        );
+        const rows = Math.max(1, Math.ceil(itemCount / columns));
 
         return {
             x: rendererSize.width - this.width - 20,
             y: 20,
             width: this.width,
-            height: this.padding * 2 + visibleItemCount * this.itemHeight
+            height: this.padding * 2 +
+                rows * this.itemHeight +
+                Math.max(0, rows - 1) * 8
         };
     }
 }

@@ -112,8 +112,8 @@ const verbPanel = new VerbPanel();
 verbPanel.draw(renderer, "look");
 
 const selectedVerb = verbPanel.findVerbAt({
-    x: 390,
-    y: 550
+    x: 100,
+    y: 570
 });
 
 assert(selectedVerb === "use", "The Use button should be clickable.");

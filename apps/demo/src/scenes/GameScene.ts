@@ -19,6 +19,7 @@ import {
     InteractionExecutor,
     InteractionPresenter,
     NavigationController,
+    NavigationDebugRenderer,
     RoomCollection,
     RoomManager,
     RoomVisualRenderer,
@@ -73,11 +74,13 @@ export class GameScene implements Scene {
 
     private readonly hotspotDebugRenderer = new HotspotDebugRenderer();
 
+    private readonly navigationDebugRenderer = new NavigationDebugRenderer();
+
     private readonly adventureUI = new ClassicAdventureUI();
 
     private readonly cursorRenderer = new GameCursor();
 
-    private readonly layout = new GameLayout({interfaceHeight: 110});
+    private readonly layout = new GameLayout();
 
     private readonly roomVisualRenderer = new RoomVisualRenderer();
 
@@ -400,6 +403,18 @@ export class GameScene implements Scene {
             this.hotspotDebugRenderer.draw(
                 context.renderer,
                 this.roomManager.currentRoom.hotspots
+            );
+        }
+
+        if (
+            context.config.debug.enabled &&
+            context.config.debug.showNavigation
+        ) {
+            this.navigationDebugRenderer.draw(
+                context.renderer,
+                this.roomManager.currentRoom,
+                this.actors,
+                this.controlledActorId
             );
         }
 

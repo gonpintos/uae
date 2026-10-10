@@ -7,6 +7,8 @@ export interface GameLayoutOptions {
     messageBoxHeight?: number;
 }
 
+export const DEFAULT_INTERFACE_HEIGHT = 190;
+
 export class GameLayout {
     public readonly messageBoxHeight: number;
 
@@ -14,7 +16,9 @@ export class GameLayout {
 
     public constructor(options: GameLayoutOptions = {}) {
         this.interfaceHeight =
-            options.interfaceHeight ?? options.messageBoxHeight ?? 110;
+            options.interfaceHeight ??
+            options.messageBoxHeight ??
+            DEFAULT_INTERFACE_HEIGHT;
         this.messageBoxHeight = this.interfaceHeight;
     }
 

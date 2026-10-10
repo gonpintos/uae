@@ -203,7 +203,7 @@ async function runTest(): Promise<void> {
     );
 
     assertEqual(franco.x, 736, "Franco should finish five steps away from the stand");
-    assertEqual(franco.y, 610, "Franco should preserve his ground anchor while walking away");
+    assertEqual(franco.y, 525, "Franco should preserve his ground anchor while walking away");
     assertEqual(franco.currentAnimation, "idle", "Franco should return to idle after walking");
     assertEqual(franco.currentFrameAssetId, "franco-idle", "Idle should restore its declared asset");
     assertEqual(franco.facing, "right", "Franco should finish facing his movement direction");

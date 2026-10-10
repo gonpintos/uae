@@ -1,6 +1,7 @@
 export interface DebugConfig {
     enabled: boolean;
     showHotspots: boolean;
+    showNavigation: boolean;
 }
 
 export interface ResolutionConfig {
@@ -21,7 +22,8 @@ export interface EngineConfigOptions {
 export const defaultEngineConfig: EngineConfig = {
     debug: {
         enabled: false,
-        showHotspots: false
+        showHotspots: false,
+        showNavigation: false
     },
     resolution: {
         width: 1280,

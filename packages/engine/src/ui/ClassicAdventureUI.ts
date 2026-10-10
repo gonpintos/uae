@@ -88,17 +88,19 @@ export class ClassicAdventureUI {
         this.drawBackground(renderer, bounds);
 
         const actionBounds: Rectangle = {
-            x: bounds.x + 10,
-            y: bounds.y + 4,
-            width: bounds.width - 20,
-            height: 28
+            x: bounds.x + 12,
+            y: bounds.y + 6,
+            width: bounds.width - 24,
+            height: 32
         };
-        const controlsY = bounds.y + 34;
-        const controlsHeight = bounds.height - 40;
-        const gap = 10;
-        const verbWidth = Math.floor((bounds.width - 30) * 0.56);
+        const controlsY = bounds.y + 44;
+        const controlsHeight = bounds.height - 56;
+        const horizontalPadding = 12;
+        const gap = 12;
+        const availableWidth = bounds.width - horizontalPadding * 2 - gap;
+        const verbWidth = Math.floor(availableWidth * 0.56);
         const verbBounds: Rectangle = {
-            x: bounds.x + 10,
+            x: bounds.x + horizontalPadding,
             y: controlsY,
             width: verbWidth,
             height: controlsHeight
@@ -106,7 +108,7 @@ export class ClassicAdventureUI {
         const inventoryBounds: Rectangle = {
             x: verbBounds.x + verbBounds.width + gap,
             y: controlsY,
-            width: bounds.x + bounds.width - 10 -
+            width: bounds.x + bounds.width - horizontalPadding -
                 (verbBounds.x + verbBounds.width + gap),
             height: controlsHeight
         };

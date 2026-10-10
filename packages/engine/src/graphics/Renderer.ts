@@ -40,6 +40,15 @@ export interface RectangleOptions {
     layer?: number;
 }
 
+export interface LineOptions {
+    from: Point;
+    to: Point;
+    color?: string;
+    width?: number;
+    alpha?: number;
+    layer?: number;
+}
+
 export interface ImageOptions {
     source: string;
 
@@ -68,6 +77,8 @@ export interface Renderer {
     drawText(options: TextOptions): void;
 
     drawRectangle(options: RectangleOptions): void;
+
+    drawLine(options: LineOptions): void;
 
     drawImage(options: ImageOptions): void;
 

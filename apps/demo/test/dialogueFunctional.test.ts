@@ -1,7 +1,8 @@
 import { DialogueCollection } from "../../../packages/engine/src/dialogue/DialogueCollection";
 import { DialogueSession } from "../../../packages/engine/src/dialogue/DialogueSession";
+import { AssetCatalog } from "../../../packages/engine/src/assets/AssetCatalog";
 import { RenderLayer } from "../../../packages/engine/src/graphics/RenderLayer";
-import type { Renderer } from "../../../packages/engine/src/graphics/Renderer";
+import type { ImageOptions, Renderer } from "../../../packages/engine/src/graphics/Renderer";
 import { Inventory } from "../../../packages/engine/src/inventory/Inventory";
 import { InventoryItemCatalog } from "../../../packages/engine/src/inventory/InventoryItemCatalog";
 import { GameState } from "../../../packages/engine/src/state/GameState";
@@ -9,6 +10,7 @@ import { DialoguePanel } from "../../../packages/engine/src/ui/DialoguePanel";
 import { GameLayout } from "../../../packages/engine/src/ui/GameLayout";
 import { InventoryPanel } from "../../../packages/engine/src/ui/InventoryPanel";
 import { demoDialoguesData } from "../src/data/demoDialoguesData";
+import { demoAssets } from "../src/assets/demoAssets";
 import { demoItemsData } from "../src/data/demoItemsData";
 
 function assert(condition: boolean, message: string): void {
@@ -46,6 +48,7 @@ const session = new DialogueSession(
 
 const drawnLayers: number[] = [];
 const drawnTexts: string[] = [];
+const drawnImages: ImageOptions[] = [];
 
 const renderer = {
     getSize: () => ({
@@ -58,7 +61,8 @@ const renderer = {
     drawText: (options: {layer?: number; text: string}) => {
         drawnLayers.push(options.layer ?? 0);
         drawnTexts.push(options.text);
-    }
+    },
+    drawImage: (options: ImageOptions) => drawnImages.push(options)
 } as unknown as Renderer;
 
 const panel = new DialoguePanel();
@@ -90,7 +94,7 @@ assert(
 );
 
 const dialogueBounds = panel.getBounds(renderer);
-const interfaceBounds = new GameLayout({interfaceHeight: 110})
+const interfaceBounds = new GameLayout()
     .getInterfaceBounds(renderer);
 
 assert(
@@ -107,7 +111,7 @@ assert(
 
 const clickedFedeOption = panel.findOptionAt({
     x: 100,
-    y: 680
+    y: 600
 });
 
 assert(
@@ -137,7 +141,7 @@ panel.draw(renderer, panel.getBounds(renderer), repeatedFedeView);
 
 const clickedFedeExit = panel.findOptionAt({
     x: 100,
-    y: 705
+    y: 626
 });
 
 const fedeExit = session.selectOption(clickedFedeExit ?? "");
@@ -157,7 +161,7 @@ panel.draw(renderer, panel.getBounds(renderer), calculatorFedeView);
 
 const clickedCalculatorOption = panel.findOptionAt({
     x: 100,
-    y: 650
+    y: 574
 });
 
 const calculatorResponse = session.selectOption(
@@ -191,11 +195,13 @@ assert(
 
 const inventoryPanel = new InventoryPanel();
 
-inventoryPanel.draw(renderer, inventory.items);
+inventoryPanel.draw(renderer, inventory.items, new AssetCatalog(demoAssets));
 
 assert(
-    drawnTexts.includes("• Calculadora"),
-    "The visual inventory should render the acquired calculator."
+    drawnImages.some(
+        (image) => image.source === "./assets/inventory/calculator.png"
+    ),
+    "The visual inventory should render the acquired calculator icon."
 );
 
 const reopenedSession = new DialogueSession(
@@ -261,7 +267,7 @@ panel.draw(renderer, panel.getBounds(renderer), initialGonView);
 
 const clickedGonOption = panel.findOptionAt({
     x: 100,
-    y: 650
+    y: 574
 });
 
 const gonResponse = session.selectOption(clickedGonOption ?? "");

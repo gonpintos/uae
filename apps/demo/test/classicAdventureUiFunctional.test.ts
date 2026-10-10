@@ -7,6 +7,7 @@ import type {
     TextOptions
 } from "../../../packages/engine/src/graphics/Renderer";
 import { BrowserInputManager } from "../../../packages/engine/src/input/BrowserInputManager";
+import { defaultEngineConfig } from "../../../packages/engine/src/config/EngineConfig";
 import { containsPoint } from "../../../packages/engine/src/interaction/Rectangle";
 import { Inventory } from "../../../packages/engine/src/inventory/Inventory";
 import { InventoryItemCatalog } from "../../../packages/engine/src/inventory/InventoryItemCatalog";
@@ -42,13 +43,18 @@ const renderer = {
     drawRectangle: (options: RectangleOptions) => rectangles.push(options),
     drawImage: (options: ImageOptions) => images.push(options)
 } as unknown as Renderer;
-const layout = new GameLayout({interfaceHeight: 110});
+const layout = new GameLayout();
 const gameViewport = layout.getGameViewport(renderer);
 const interfaceBounds = layout.getInterfaceBounds(renderer);
 
-assertEqual(gameViewport.height, 610, "The gameplay area should stop above the fixed UI");
-assertEqual(interfaceBounds.y, 610, "The classic UI should stay fixed at the bottom");
-assertEqual(interfaceBounds.height, 110, "The classic UI should use its configured height");
+assertEqual(gameViewport.height, 530, "The gameplay area should use roughly 75% of the screen");
+assertEqual(interfaceBounds.y, 530, "The classic UI should stay fixed at the bottom");
+assertEqual(interfaceBounds.height, 190, "The classic UI should use the expanded classic height");
+assert(
+    !defaultEngineConfig.debug.enabled &&
+        !defaultEngineConfig.debug.showNavigation,
+    "Navigation debug should be disabled by default"
+);
 assertEqual(
     JSON.stringify(new DialoguePanel().getBounds(renderer)),
     JSON.stringify(interfaceBounds),
@@ -81,8 +87,8 @@ assert(
     "The fixed inventory should keep the calculator image"
 );
 
-const useVerb = ui.findVerbAt({x: 400, y: 675});
-const calculator = ui.findItemAt({x: 900, y: 675});
+const useVerb = ui.findVerbAt({x: 180, y: 670});
+const calculator = ui.findItemAt({x: 770, y: 620});
 
 assertEqual(useVerb, "use", "The Use verb should remain selectable in the fixed UI");
 assertEqual(calculator, "calculator", "Inventory items should remain selectable in the fixed UI");
@@ -112,8 +118,8 @@ assert(ui.isVisible, "Cinematic UI should remain visible");
 assert(!ui.isInteractive, "Cinematic UI should be marked as disabled");
 assert(
     texts.some((entry) => entry.text === "Ir a") &&
-        texts.some((entry) => entry.text === "Calculadora"),
-    "Disabled UI should still render verbs and inventory items"
+        !texts.some((entry) => entry.text === "Calculadora"),
+    "Disabled UI should render verbs while inventory remains icon-only"
 );
 assert(
     images.some((entry) => entry.source === "./assets/inventory/calculator.png"),
@@ -133,12 +139,12 @@ assert(
     "Disabled UI should render a subtle dimming overlay"
 );
 assertEqual(
-    ui.findVerbAt({x: 400, y: 675}),
+    ui.findVerbAt({x: 180, y: 670}),
     null,
     "Disabled verbs should not resolve clicks"
 );
 assertEqual(
-    ui.findItemAt({x: 900, y: 675}),
+    ui.findItemAt({x: 770, y: 620}),
     null,
     "Disabled inventory items should not resolve clicks"
 );
@@ -150,8 +156,8 @@ assert(
 let executedUIClicks = 0;
 
 if (
-    ui.findVerbAt({x: 400, y: 675}) ||
-    ui.findItemAt({x: 900, y: 675})
+    ui.findVerbAt({x: 180, y: 670}) ||
+    ui.findItemAt({x: 770, y: 620})
 ) {
     executedUIClicks += 1;
 }
@@ -178,7 +184,7 @@ assert(
 );
 assert(ui.isInteractive, "A normal UI draw should restore interaction");
 assertEqual(
-    ui.findVerbAt({x: 400, y: 675}),
+    ui.findVerbAt({x: 180, y: 670}),
     "use",
     "Verbs should accept input again after cinematic lock ends"
 );
@@ -190,6 +196,36 @@ assert(
         (entry) => entry.text === "Inventario" || entry.text === "(vacío)"
     ),
     "An empty inventory should not render labels or placeholder text"
+);
+
+texts.length = 0;
+images.length = 0;
+new InventoryPanel().draw(
+    renderer,
+    inventory.items,
+    new AssetCatalog(demoAssets),
+    {x: 720, y: 574, width: 548, height: 134}
+);
+assertEqual(texts.length, 0, "Inventory cells should not draw item names or descriptions");
+assert(
+    images.some((entry) => entry.source === "./assets/inventory/calculator.png"),
+    "Inventory cells should primarily render the declared icon"
+);
+
+texts.length = 0;
+ui.draw(
+    renderer,
+    interfaceBounds,
+    {
+        selectedVerb: "use",
+        targetName: "Calculadora",
+        items: inventory.items
+    },
+    new AssetCatalog(demoAssets)
+);
+assert(
+    texts.some((entry) => entry.text === "Usar Calculadora"),
+    "Hovering an inventory icon should update ActionLine with verb and item name"
 );
 
 const verbs = new VerbController();

@@ -13,6 +13,7 @@ export * from "./config/EngineConfig";
 export * from "./engine/Engine";
 
 export * from "./debug/HotspotDebugRenderer";
+export * from "./debug/NavigationDebugRenderer";
 
 export * from "./dialogue/DialogueCollection";
 export * from "./dialogue/DialogueData";

@@ -51,7 +51,7 @@ assert(
             image.source === "./assets/actors/franco/idle.png" &&
             image.flipHorizontal === false &&
             image.x === 560 &&
-            image.y === 338
+            image.y === 253
     ),
     "ActorRenderer should place Franco's sprite relative to his ground anchor"
 );

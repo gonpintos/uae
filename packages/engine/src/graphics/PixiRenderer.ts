@@ -14,6 +14,7 @@ import type { Point } from "../math/Point";
 
 import type {
     ImageOptions,
+    LineOptions,
     RectangleOptions,
     Renderer,
     RendererSize,
@@ -170,6 +171,21 @@ export class PixiRenderer implements Renderer {
         rectangle.zIndex = options.layer ?? 0;
 
         this.logicalRoot.addChild(rectangle);
+    }
+
+    public drawLine(options: LineOptions): void {
+        const line = new Graphics();
+
+        line.moveTo(options.from.x, options.from.y);
+        line.lineTo(options.to.x, options.to.y);
+        line.stroke({
+            color: options.color ?? "#ffffff",
+            width: options.width ?? 1,
+            alpha: options.alpha ?? 1
+        });
+        line.zIndex = options.layer ?? 0;
+
+        this.logicalRoot.addChild(line);
     }
 
     public drawImage(options: ImageOptions): void {

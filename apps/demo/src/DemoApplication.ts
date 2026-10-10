@@ -41,8 +41,9 @@ export class DemoApplication {
             inventoryItems: demoItemsData,
             config: {
                 debug: {
-                    enabled: true,
-                    showHotspots: false
+                    enabled: false,
+                    showHotspots: false,
+                    showNavigation: false
                 },
                 resolution: {
                     width: 1280,
