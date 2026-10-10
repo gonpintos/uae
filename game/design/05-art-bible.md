@@ -6,13 +6,18 @@
 
 ## Vertical slice
 
+## Background jugable UAE v1: 
+
+1280×530. 
+El área inferior 1280×190 está reservada permanentemente para interfaz.
+
 Escena: `los-anteojos-de-franco`
 
 ## Assets actuales
 
 ### Background
 - `copenhagen-street`
-- 1280 × 720
+- 1280 × 530
 
 ### Actors
 - Franco: 192 × 272

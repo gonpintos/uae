@@ -10,12 +10,12 @@ entry:
   once: true
 
 room:
-  id: demo-room
-  name: Demo Room
+  id: copenhagen-sunglasses-street
+  name: Copenhagen — Puesto de anteojos
   visuals:
     - id: copenhagen-street-background
       asset: copenhagen-street
-      bounds: {x: 0, y: -85, width: 1280, height: 720}
+      bounds: {x: 0, y: 0, width: 1280, height: 530}
       layer: roomBackground
   walkableArea:
     type: polygon
@@ -308,6 +308,7 @@ dialogues:
 
 sequences:
   - id: opening-sunglasses
+    ui: hidden
     actions:
       - type: say
         actor: franco

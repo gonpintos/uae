@@ -134,6 +134,8 @@ export class GameScene implements Scene {
 
     private unsubscribePointerMove: (() => void) | null = null;
 
+    private stopCursorAnimation: (() => void) | null = null;
+
     public constructor(
         roomsData: RoomData[],
         initialRoomId: string,
@@ -256,6 +258,13 @@ export class GameScene implements Scene {
         );
 
         this.drawScreen(context);
+
+        this.stopCursorAnimation?.();
+        this.stopCursorAnimation = this.cursorRenderer.startAnimation(() => {
+            if (this.cursorPosition) {
+                this.drawScreen(context);
+            }
+        });
 
         this.unsubscribePointerMove =
             context.input.onPointerMove((logicalPosition) => {
@@ -399,6 +408,8 @@ export class GameScene implements Scene {
         this.unsubscribePointerDown = null;
         this.unsubscribePointerMove?.();
         this.unsubscribePointerMove = null;
+        this.stopCursorAnimation?.();
+        this.stopCursorAnimation = null;
         this.dialogueSession = null;
         this.interactionExecutor = null;
         this.interactionPresenter = null;

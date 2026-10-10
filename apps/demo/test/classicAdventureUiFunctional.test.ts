@@ -454,7 +454,31 @@ assertEqual(
 listeners.get("pointermove")?.({clientX: 200, clientY: 100});
 
 rectangles.length = 0;
-const gameCursor = new GameCursor();
+let cursorTime = 0;
+let scheduledFrame: (() => void) | null = null;
+let scheduledInterval = 0;
+let schedulerStopped = false;
+let animationFrames = 0;
+const gameCursor = new GameCursor({
+    clock: () => cursorTime,
+    scheduler: (callback, intervalMs) => {
+        scheduledFrame = callback;
+        scheduledInterval = intervalMs;
+
+        return () => {
+            schedulerStopped = true;
+        };
+    }
+});
+const stopCursorAnimation = gameCursor.startAnimation(() => {
+    animationFrames += 1;
+});
+
+assertEqual(scheduledInterval, 110, "The default contrast step should last 110 ms");
+(scheduledFrame as (() => void) | null)?.();
+assertEqual(animationFrames, 1, "The cursor scheduler should request a new frame");
+stopCursorAnimation();
+assert(schedulerStopped, "Stopping cursor animation should release its scheduler");
 
 gameCursor.draw(renderer, pointerState.value ?? {x: 0, y: 0});
 
@@ -480,27 +504,47 @@ assert(
     "Every crosshair edge should use integer logical coordinates"
 );
 assertEqual(
-    rectangles.filter((entry) => entry.color === "#000000").length,
+    rectangles.filter((entry) => entry.width === 3 && entry.height === 9).length,
     2,
-    "The crosshair should draw a thin black outline"
+    "The crosshair should have equal upper and lower arms"
 );
 assertEqual(
-    rectangles.filter((entry) => entry.color === "#ffffff").length,
+    rectangles.filter((entry) => entry.width === 9 && entry.height === 3).length,
     2,
-    "The crosshair interior should be white"
+    "The crosshair should have equal left and right arms"
+);
+assert(
+    rectangles.every((entry) => entry.color === "#ffffff"),
+    "The cursor contrast cycle should begin in white"
 );
 assert(
     rectangles.every((entry) => entry.pixelPerfect === true),
     "Every crosshair primitive should request pixel-perfect rendering"
 );
 assert(
-    !rectangles.some((entry) =>
-        cursorMinX >= entry.x &&
-        cursorMinX < entry.x + entry.width &&
-        cursorMinY >= entry.y &&
-        cursorMinY < entry.y + entry.height
+    Array.from({length: 7}, (_, yOffset) =>
+        Array.from({length: 7}, (_, xOffset) => ({
+            x: 97 + xOffset,
+            y: 47 + yOffset
+        }))
+    ).flat().every((point) =>
+        !rectangles.some((entry) =>
+            point.x >= entry.x &&
+            point.x < entry.x + entry.width &&
+            point.y >= entry.y &&
+            point.y < entry.y + entry.height
+        )
     ),
-    "The crosshair corners should remain transparent"
+    "The 7 by 7 area around the click hotspot should remain transparent"
+);
+assert(
+    !rectangles.some((entry) =>
+        100 >= entry.x &&
+        100 < entry.x + entry.width &&
+        50 >= entry.y &&
+        50 < entry.y + entry.height
+    ),
+    "The exact click hotspot should remain transparent"
 );
 assert(
     rectangles.every((entry) => entry.layer === RenderLayer.Cursor),
@@ -510,6 +554,51 @@ assert(
     RenderLayer.Cursor > RenderLayer.Modal &&
         RenderLayer.Cursor > RenderLayer.Speech,
     "The cursor layer should remain above modal UI and speech"
+);
+
+const expectedCursorColors = [
+    "#ffffff",
+    "#c8c8c8",
+    "#777777",
+    "#181818",
+    "#777777",
+    "#c8c8c8",
+    "#ffffff"
+];
+const initialGeometry = rectangles.map(({x, y, width, height}) => ({
+    x,
+    y,
+    width,
+    height
+}));
+
+for (const [step, expectedColor] of expectedCursorColors.entries()) {
+    cursorTime = step * gameCursor.stepDurationMs;
+    rectangles.length = 0;
+    gameCursor.draw(renderer, {x: 100, y: 50});
+
+    assert(
+        rectangles.every((entry) => entry.color === expectedColor),
+        `Cursor contrast step ${String(step)} should use ${expectedColor}`
+    );
+    assertEqual(
+        JSON.stringify(rectangles.map(({x, y, width, height}) => ({
+            x,
+            y,
+            width,
+            height
+        }))),
+        JSON.stringify(initialGeometry),
+        "Changing contrast must not move or resize the cursor"
+    );
+}
+
+cursorTime = expectedCursorColors.length * gameCursor.stepDurationMs;
+rectangles.length = 0;
+gameCursor.draw(renderer, {x: 100, y: 50});
+assert(
+    rectangles.every((entry) => entry.color === expectedCursorColors[0]),
+    "The cursor contrast sequence should repeat cyclically"
 );
 
 rectangles.length = 0;

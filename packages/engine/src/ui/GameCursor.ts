@@ -4,85 +4,148 @@ import type { Point } from "../math/Point";
 
 export interface GameCursorOptions {
     size?: number;
-    armWidth?: number;
-    outlineWidth?: number;
+    armThickness?: number;
+    centerGapSize?: number;
+    colors?: readonly string[];
+    stepDurationMs?: number;
     layer?: number;
+    clock?: GameCursorClock;
+    scheduler?: GameCursorScheduler;
 }
+
+export type GameCursorClock = () => number;
+
+export type GameCursorScheduler = (
+    callback: () => void,
+    intervalMs: number
+) => () => void;
+
+const DEFAULT_COLORS = [
+    "#ffffff",
+    "#c8c8c8",
+    "#777777",
+    "#181818",
+    "#777777",
+    "#c8c8c8",
+    "#ffffff"
+] as const;
+
+const DEFAULT_STEP_DURATION_MS = 110;
+
+const defaultScheduler: GameCursorScheduler = (callback, intervalMs) => {
+    const interval = globalThis.setInterval(callback, intervalMs);
+
+    return () => {
+        globalThis.clearInterval(interval);
+    };
+};
 
 export class GameCursor {
     public readonly size: number;
 
     public readonly hotspotOffset: number;
 
-    private readonly armWidth: number;
+    public readonly colors: readonly string[];
 
-    private readonly outlineWidth: number;
+    public readonly stepDurationMs: number;
+
+    private readonly armThickness: number;
+
+    private readonly centerGapSize: number;
+
+    private readonly armLength: number;
 
     private readonly layer: number;
 
+    private readonly clock: GameCursorClock;
+
+    private readonly scheduler: GameCursorScheduler;
+
+    private animationStartedAtMs: number;
+
     public constructor(options: GameCursorOptions = {}) {
         this.size = options.size ?? 25;
-        this.armWidth = options.armWidth ?? 5;
-        this.outlineWidth = options.outlineWidth ?? 1;
+        this.armThickness = options.armThickness ?? 3;
+        this.centerGapSize = options.centerGapSize ?? 7;
+        this.colors = options.colors ?? DEFAULT_COLORS;
+        this.stepDurationMs = options.stepDurationMs ?? DEFAULT_STEP_DURATION_MS;
         this.layer = options.layer ?? RenderLayer.Cursor;
+        this.clock = options.clock ?? Date.now;
+        this.scheduler = options.scheduler ?? defaultScheduler;
 
         this.assertOddPositiveInteger(this.size, "size");
-        this.assertOddPositiveInteger(this.armWidth, "armWidth");
+        this.assertOddPositiveInteger(this.armThickness, "armThickness");
+        this.assertOddPositiveInteger(this.centerGapSize, "centerGapSize");
 
-        if (
-            !Number.isInteger(this.outlineWidth) ||
-            this.outlineWidth < 1 ||
-            this.outlineWidth * 2 >= this.armWidth ||
-            this.armWidth > this.size
-        ) {
-            throw new Error("GameCursor requires an integer outline inside its arm width.");
+        if (this.centerGapSize >= this.size) {
+            throw new Error("GameCursor centerGapSize must be smaller than its size.");
+        }
+
+        if (this.armThickness > this.centerGapSize) {
+            throw new Error("GameCursor armThickness must fit inside its center gap.");
+        }
+
+        if (this.colors.length === 0) {
+            throw new Error("GameCursor requires at least one animation color.");
+        }
+
+        if (!Number.isFinite(this.stepDurationMs) || this.stepDurationMs <= 0) {
+            throw new Error("GameCursor stepDurationMs must be greater than zero.");
         }
 
         this.hotspotOffset = Math.floor(this.size / 2);
+        this.armLength = (this.size - this.centerGapSize) / 2;
+        this.animationStartedAtMs = this.clock();
+    }
+
+    public get currentColor(): string {
+        const elapsed = Math.max(0, this.clock() - this.animationStartedAtMs);
+        const colorIndex = Math.floor(elapsed / this.stepDurationMs) % this.colors.length;
+
+        return this.colors[colorIndex] ?? this.colors[0]!;
+    }
+
+    public startAnimation(onFrame: () => void): () => void {
+        this.animationStartedAtMs = this.clock();
+
+        return this.scheduler(onFrame, this.stepDurationMs);
     }
 
     public draw(renderer: Renderer, position: Point): void {
         const centerX = Math.round(position.x);
         const centerY = Math.round(position.y);
-        const halfArmWidth = Math.floor(this.armWidth / 2);
-        const outerStartX = centerX - this.hotspotOffset;
-        const outerStartY = centerY - this.hotspotOffset;
-        const armStartX = centerX - halfArmWidth;
-        const armStartY = centerY - halfArmWidth;
-        const innerSize = this.size - this.outlineWidth * 2;
-        const innerArmWidth = this.armWidth - this.outlineWidth * 2;
-        const innerHalfArmWidth = Math.floor(innerArmWidth / 2);
-        const innerStartX = centerX - innerHalfArmWidth;
-        const innerStartY = centerY - innerHalfArmWidth;
+        const halfThickness = Math.floor(this.armThickness / 2);
+        const halfGap = Math.floor(this.centerGapSize / 2);
+        const color = this.currentColor;
 
         const rectangles: RectangleOptions[] = [
             {
-                x: outerStartX,
-                y: armStartY,
-                width: this.size,
-                height: this.armWidth,
-                color: "#000000"
+                x: centerX - halfThickness,
+                y: centerY - this.hotspotOffset,
+                width: this.armThickness,
+                height: this.armLength,
+                color
             },
             {
-                x: armStartX,
-                y: outerStartY,
-                width: this.armWidth,
-                height: this.size,
-                color: "#000000"
+                x: centerX - halfThickness,
+                y: centerY + halfGap + 1,
+                width: this.armThickness,
+                height: this.armLength,
+                color
             },
             {
-                x: centerX - Math.floor(innerSize / 2),
-                y: innerStartY,
-                width: innerSize,
-                height: innerArmWidth,
-                color: "#ffffff"
+                x: centerX - this.hotspotOffset,
+                y: centerY - halfThickness,
+                width: this.armLength,
+                height: this.armThickness,
+                color
             },
             {
-                x: innerStartX,
-                y: centerY - Math.floor(innerSize / 2),
-                width: innerArmWidth,
-                height: innerSize,
-                color: "#ffffff"
+                x: centerX + halfGap + 1,
+                y: centerY - halfThickness,
+                width: this.armLength,
+                height: this.armThickness,
+                color
             }
         ];
 
