@@ -23,6 +23,22 @@ function assertEqual<T>(actual: T, expected: T, message: string): void {
 async function runTest(): Promise<void> {
     const actors = new ActorCollection(contentActors);
     const sequences = new ActionSequenceCollection(contentSequences);
+    const buySequence = sequences.getById("buy-sunglasses");
+    const buySayActions = buySequence.actions.filter(
+        (action) => action.type === "say"
+    );
+    const finalSayAction = [...buySayActions].at(-1);
+    const finalWaitAction = [...buySequence.actions]
+        .reverse()
+        .find((action) => action.type === "wait");
+    const titleAction = buySequence.actions.find(
+        (action) => action.type === "showTitle"
+    );
+
+    if (!finalSayAction || !finalWaitAction || !titleAction) {
+        throw new Error("The buy sequence should declare final speech, wait, and title actions.");
+    }
+
     const delays: number[] = [];
     const events: string[] = [];
     const speechDelays: number[] = [];
@@ -37,6 +53,8 @@ async function runTest(): Promise<void> {
     }> = [];
     let sceneEnded = false;
     let shownTitle: string | null = null;
+    let startedUIPolicy: string | null = null;
+    let finishedUIPolicy: string | null = null;
     let speech: ActorSpeechController;
 
     speech = new ActorSpeechController(
@@ -47,7 +65,7 @@ async function runTest(): Promise<void> {
 
                 events.push(`say:${actor.name}:${speech.current.text}`);
 
-                if (speech.current.text === "¡Uy! ¿Dónde están mis anteojos?") {
+                if (speech.current.text === finalSayAction.message) {
                     finalOrder.push("speech-final");
                 }
             }
@@ -94,6 +112,12 @@ async function runTest(): Promise<void> {
                 sceneEnded = true;
                 events.push("end");
                 finalOrder.push("endScene");
+            },
+            onStarted: (sequence) => {
+                startedUIPolicy = sequence.ui ?? null;
+            },
+            onFinished: ({sequence}) => {
+                finishedUIPolicy = sequence.ui ?? null;
             }
         },
         (durationMs) => {
@@ -101,13 +125,16 @@ async function runTest(): Promise<void> {
 
             const actor = actors.getById("franco");
 
-            if (durationMs === 3000 && actor.x === 736) {
+            if (
+                durationMs === finalWaitAction.durationMs &&
+                actor.x === 736
+            ) {
                 assertEqual(
                     actor.currentAnimation,
                     "idle",
                     "The final wait should begin after movement restores idle"
                 );
-                finalOrder.push("wait(3000)");
+                finalOrder.push(`wait(${durationMs})`);
             }
 
             return Promise.resolve();
@@ -132,17 +159,28 @@ async function runTest(): Promise<void> {
     assert(!runner.isRunning, "The runner should release its running state after the sequence");
     assert(!speech.isSpeaking, "Sequence speech should clear before the next action");
     assert(sceneEnded, "The sequence should end the scene");
-    assertEqual(speechDelays.length, 2, "Both sequence say actions should use actor speech timing");
+    assertEqual(startedUIPolicy, "hidden", "The runner should expose the declared UI policy on start");
+    assertEqual(finishedUIPolicy, "hidden", "The runner should preserve the UI policy through completion");
     assertEqual(
-        delays.join(","),
-        "180,180,180,180,3000,180,180,180,180,180,3000",
-        "Unexpected sequence delays"
+        speechDelays.length,
+        buySayActions.length,
+        "Every sequence say action should use actor speech timing"
+    );
+    assertEqual(
+        delays.filter((duration) => duration === finalWaitAction.durationMs).length,
+        buySequence.actions.filter(
+            (action) =>
+                action.type === "wait" &&
+                action.durationMs === finalWaitAction.durationMs
+        ).length,
+        "Every declared sequence wait should pass through the delay pipeline"
     );
     assertEqual(
         events.join("\n"),
         [
-            "say:Franco:¡Listo! Tengo mis anteojos.",
-            "say:Franco:¡Uy! ¿Dónde están mis anteojos?",
+            ...buySayActions.map((action) =>
+                `say:${actors.getById(action.actorId).name}:${action.message}`
+            ),
             "end"
         ].join("\n"),
         "The declarative actions should execute in order"
@@ -151,16 +189,16 @@ async function runTest(): Promise<void> {
         finalOrder.join("\n"),
         [
             "moveBySteps(5):idle",
-            "wait(3000)",
+            `wait(${finalWaitAction.durationMs})`,
             "speech-final",
-            "showTitle:CONTINUARÁ",
+            `showTitle:${titleAction.text}`,
             "endScene"
         ].join("\n"),
         "The final sequence actions should execute in the requested order"
     );
     assertEqual(
         shownTitle,
-        "CONTINUARÁ",
+        titleAction.text,
         "The title should remain available after endScene"
     );
 
@@ -216,10 +254,10 @@ async function runTest(): Promise<void> {
         }
     } as unknown as Renderer;
 
-    new ScreenTitle().draw(titleRenderer, "CONTINUARÁ");
+    new ScreenTitle().draw(titleRenderer, titleAction.text);
 
     assertEqual(titleDraws.length, 1, "ScreenTitle should draw one text element");
-    assertEqual(titleDraws[0]?.text, "CONTINUARÁ", "ScreenTitle should draw the supplied text");
+    assertEqual(titleDraws[0]?.text, titleAction.text, "ScreenTitle should draw the supplied text");
     assertEqual(titleDraws[0]?.x, 640, "ScreenTitle should center horizontally");
     assertEqual(titleDraws[0]?.y, 360, "ScreenTitle should center vertically");
     assertEqual(titleDraws[0]?.anchorX, 0.5, "ScreenTitle should use a centered horizontal anchor");
@@ -227,6 +265,11 @@ async function runTest(): Promise<void> {
     assertEqual(titleDraws[0]?.layer, RenderLayer.Modal, "ScreenTitle should render on the top UI layer");
 
     const openingSequence = sequences.getById("opening-sunglasses");
+    const openingSayAction = openingSequence.actions[0];
+
+    if (openingSayAction?.type !== "say") {
+        throw new Error("The opening sequence should begin with speech.");
+    }
 
     assertEqual(
         openingSequence.actions.length,
@@ -237,6 +280,11 @@ async function runTest(): Promise<void> {
         openingSequence.actions[0]?.type,
         "say",
         "The opening line should use the existing sequence speech action"
+    );
+    assertEqual(
+        openingSequence.ui,
+        undefined,
+        "A sequence without ui should retain the default visible policy"
     );
 
     let releaseOpeningSpeech: (() => void) | null = null;
@@ -261,11 +309,12 @@ async function runTest(): Promise<void> {
                 openingSpeech.say(actor.id, message),
             onShowTitle: () => undefined,
             onEndScene: () => undefined,
-            onStarted: () => {
-                openingUIVisible = true;
+            onStarted: (sequence) => {
+                openingUIVisible = sequence.ui !== "hidden";
                 openingUIInteractive = false;
             },
-            onFinished: ({endedScene}) => {
+            onFinished: ({endedScene, sequence}) => {
+                openingUIVisible = !endedScene || sequence.ui !== "hidden";
                 openingUIInteractive = !endedScene;
                 openingVerbs.completeAction();
             }
@@ -294,7 +343,7 @@ async function runTest(): Promise<void> {
     );
     assertEqual(
         openingSpeech.current?.text,
-        "¡Necesito comprarme anteojos de sol!",
+        openingSayAction.message,
         "The opening should reproduce the declared line"
     );
 
@@ -349,6 +398,25 @@ async function runTest(): Promise<void> {
                     type: "endScene"
                 }
             ]
+        },
+        {
+            id: "hidden-non-ending-sequence",
+            ui: "hidden",
+            actions: [
+                {
+                    type: "wait",
+                    durationMs: 25
+                }
+            ]
+        },
+        {
+            id: "hidden-ending-sequence",
+            ui: "hidden",
+            actions: [
+                {
+                    type: "endScene"
+                }
+            ]
         }
     ]);
     let releaseNormalSequence: (() => void) | null = null;
@@ -368,13 +436,13 @@ async function runTest(): Promise<void> {
                 lifecycleSceneEnded = true;
                 uiInteractive = false;
             },
-            onStarted: () => {
-                uiVisible = true;
+            onStarted: (sequence) => {
+                uiVisible = sequence.ui !== "hidden";
                 uiInteractive = false;
             },
-            onFinished: ({endedScene}) => {
+            onFinished: ({endedScene, sequence}) => {
                 completionStates.push(endedScene);
-                uiVisible = true;
+                uiVisible = !endedScene || sequence.ui !== "hidden";
 
                 if (!endedScene && !lifecycleSceneEnded) {
                     uiInteractive = true;
@@ -421,6 +489,31 @@ async function runTest(): Promise<void> {
         "Clicks should execute again after a normal sequence"
     );
 
+    const hiddenNormalExecution = lifecycleRunner.run(
+        "hidden-non-ending-sequence"
+    );
+
+    assert(!uiVisible, "ui: hidden should hide the classic UI while running");
+    assert(!uiInteractive, "A hidden UI sequence should still block input");
+    tryClick();
+    assertEqual(
+        executedClicks,
+        1,
+        "A hidden UI sequence should block clicks"
+    );
+
+    const releaseHiddenSequence = releaseNormalSequence as (() => void) | null;
+
+    if (!releaseHiddenSequence) {
+        throw new Error("The hidden non-ending sequence should be waiting.");
+    }
+
+    releaseHiddenSequence();
+    await hiddenNormalExecution;
+
+    assert(uiVisible, "A normal hidden sequence should restore the UI");
+    assert(uiInteractive, "A normal hidden sequence should restore input");
+
     await lifecycleRunner.run("ending-sequence");
 
     assert(lifecycleSceneEnded, "endScene should mark the scene as ended");
@@ -435,9 +528,24 @@ async function runTest(): Promise<void> {
         1,
         "Clicks should remain blocked after endScene"
     );
+
+    lifecycleSceneEnded = false;
+    uiVisible = true;
+    uiInteractive = true;
+
+    await lifecycleRunner.run("hidden-ending-sequence");
+
+    assert(
+        !uiVisible,
+        "A hidden sequence ending the scene should keep the UI hidden"
+    );
+    assert(
+        !uiInteractive,
+        "A hidden sequence ending the scene should keep input blocked"
+    );
     assertEqual(
         completionStates.join(","),
-        "false,true",
+        "false,false,true,true",
         "Sequence completion should report whether endScene ran"
     );
 

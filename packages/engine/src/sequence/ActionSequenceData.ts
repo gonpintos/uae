@@ -45,5 +45,6 @@ export type ActionSequenceStep =
 
 export interface ActionSequenceData {
     id: string;
+    ui?: "hidden";
     actions: readonly ActionSequenceStep[];
 }

@@ -314,14 +314,18 @@ sequences:
         text: "¡Necesito comprarme anteojos de sol!"
 
   - id: buy-sunglasses
+    ui: hidden
     actions:
       - type: moveTo
         actor: franco
         x: 536
         y: 525
         durationMs: 720
+      - type: say
+        actor: franco
+        text: "Sunglasses, please?"
       - type: wait
-        durationMs: 3000
+        durationMs: 2500
       - type: say
         actor: franco
         text: "¡Listo! Tengo mis anteojos."
@@ -332,7 +336,7 @@ sequences:
         deltaY: 0
         stepDurationMs: 180
       - type: wait
-        durationMs: 3000
+        durationMs: 2500
       - type: say
         actor: franco
         text: "¡Uy! ¿Dónde están mis anteojos?"

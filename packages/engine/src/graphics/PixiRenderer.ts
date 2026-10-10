@@ -52,6 +52,8 @@ export class PixiRenderer implements Renderer {
 
         await this.application.init({
             background: "#111111",
+            antialias: false,
+            roundPixels: true,
             resizeTo: container
         });
 
@@ -134,7 +136,13 @@ export class PixiRenderer implements Renderer {
     public drawRectangle(
         options: RectangleOptions
     ): void {
-        const rectangle = new Graphics();
+        const rectangle = new Graphics({
+            roundPixels: options.pixelPerfect ?? false
+        });
+
+        if (options.pixelPerfect) {
+            rectangle.eventMode = "none";
+        }
 
         rectangle.rect(
             options.x,
@@ -285,8 +293,8 @@ export class PixiRenderer implements Renderer {
         }
 
         return {
-            x: logicalPosition.x,
-            y: logicalPosition.y
+            x: Math.round(logicalPosition.x),
+            y: Math.round(logicalPosition.y)
         };
     }
 

@@ -168,6 +168,31 @@ assertEqual(
 );
 
 texts.length = 0;
+rectangles.length = 0;
+images.length = 0;
+ui.draw(
+    renderer,
+    interfaceBounds,
+    {
+        selectedVerb: "goTo",
+        targetName: null,
+        items: inventory.items,
+        visible: false,
+        interactive: false
+    },
+    new AssetCatalog(contentAssets)
+);
+assert(!ui.isVisible, "A hidden sequence policy should hide the classic UI");
+assert(!ui.isInteractive, "A hidden classic UI should never accept input");
+assertEqual(texts.length, 0, "A hidden classic UI should draw no text");
+assertEqual(rectangles.length, 0, "A hidden classic UI should draw no panels");
+assertEqual(images.length, 0, "A hidden classic UI should draw no inventory icons");
+assert(
+    !ui.contains({x: 900, y: 675}),
+    "A hidden classic UI should expose no interactive bounds"
+);
+
+texts.length = 0;
 ui.draw(
     renderer,
     interfaceBounds,
@@ -377,8 +402,10 @@ const unsubscribeMove = input.onPointerMove((position) => {
     pointerState.value = position;
 });
 const pressedButtons: string[] = [];
-const unsubscribeDown = input.onPointerDown((_position, button) => {
+const pressedPositions: Point[] = [];
+const unsubscribeDown = input.onPointerDown((position, button) => {
     pressedButtons.push(button);
+    pressedPositions.push(position);
 });
 
 let secondaryPrevented = false;
@@ -403,6 +430,12 @@ assertEqual(
     "secondary,primary",
     "Browser input should distinguish right and left pointer buttons"
 );
+assert(
+    pressedPositions.every(
+        (position) => position.x === 100 && position.y === 50
+    ),
+    "Primary and secondary clicks should retain the logical cursor hotspot"
+);
 assert(secondaryPrevented, "Right-click should suppress the browser's native action");
 
 listeners.get("pointermove")?.({clientX: 200, clientY: 100});
@@ -421,11 +454,54 @@ assertEqual(
 listeners.get("pointermove")?.({clientX: 200, clientY: 100});
 
 rectangles.length = 0;
-new GameCursor().draw(renderer, pointerState.value ?? {x: 0, y: 0});
+const gameCursor = new GameCursor();
 
-assert(rectangles.length > 0, "The UAE cursor should draw its own pixel shape");
-assertEqual(rectangles[0]?.x, 100, "The cursor hotspot should follow logical x");
-assertEqual(rectangles[0]?.y, 50, "The cursor hotspot should follow logical y");
+gameCursor.draw(renderer, pointerState.value ?? {x: 0, y: 0});
+
+assertEqual(rectangles.length, 4, "The crosshair should use four generated rectangles");
+assertEqual(gameCursor.size, 25, "The crosshair should be 25 logical pixels wide and high");
+assertEqual(gameCursor.hotspotOffset, 12, "Pixel 12,12 should be the crosshair hotspot");
+const cursorMinX = Math.min(...rectangles.map((entry) => entry.x));
+const cursorMinY = Math.min(...rectangles.map((entry) => entry.y));
+const cursorMaxX = Math.max(...rectangles.map((entry) => entry.x + entry.width));
+const cursorMaxY = Math.max(...rectangles.map((entry) => entry.y + entry.height));
+
+assertEqual(cursorMaxX - cursorMinX, 25, "The crosshair bounds should be 25 pixels wide");
+assertEqual(cursorMaxY - cursorMinY, 25, "The crosshair bounds should be 25 pixels high");
+assertEqual(cursorMinX + gameCursor.hotspotOffset, 100, "The visual center should match click x");
+assertEqual(cursorMinY + gameCursor.hotspotOffset, 50, "The visual center should match click y");
+assert(
+    rectangles.every((entry) =>
+        Number.isInteger(entry.x) &&
+        Number.isInteger(entry.y) &&
+        Number.isInteger(entry.width) &&
+        Number.isInteger(entry.height)
+    ),
+    "Every crosshair edge should use integer logical coordinates"
+);
+assertEqual(
+    rectangles.filter((entry) => entry.color === "#000000").length,
+    2,
+    "The crosshair should draw a thin black outline"
+);
+assertEqual(
+    rectangles.filter((entry) => entry.color === "#ffffff").length,
+    2,
+    "The crosshair interior should be white"
+);
+assert(
+    rectangles.every((entry) => entry.pixelPerfect === true),
+    "Every crosshair primitive should request pixel-perfect rendering"
+);
+assert(
+    !rectangles.some((entry) =>
+        cursorMinX >= entry.x &&
+        cursorMinX < entry.x + entry.width &&
+        cursorMinY >= entry.y &&
+        cursorMinY < entry.y + entry.height
+    ),
+    "The crosshair corners should remain transparent"
+);
 assert(
     rectangles.every((entry) => entry.layer === RenderLayer.Cursor),
     "Every cursor pixel should render on the top cursor layer"
@@ -442,11 +518,17 @@ const doubledScaleRenderer = {
     getViewportScale: () => 2
 } as unknown as Renderer;
 
-new GameCursor().draw(doubledScaleRenderer, {x: 100, y: 50});
+gameCursor.draw(doubledScaleRenderer, {x: 100, y: 50});
+const scaledMinX = Math.min(...rectangles.map((entry) => entry.x));
+const scaledMaxX = Math.max(...rectangles.map((entry) => entry.x + entry.width));
 assertEqual(
-    (rectangles[0]?.width ?? 0) * 2,
-    4,
-    "The cursor should keep a constant displayed size when the canvas scale changes"
+    scaledMaxX - scaledMinX,
+    25,
+    "The cursor should remain 25 logical pixels when the canvas scale changes"
+);
+assert(
+    rectangles.every((entry) => entry.pixelPerfect === true),
+    "Scaled cursor geometry should continue requesting pixel snapping"
 );
 
 unsubscribeMove();

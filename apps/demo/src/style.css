@@ -10,9 +10,12 @@ body {
 #app {
     width: 100%;
     height: 100%;
+    cursor: none;
 }
 
 #app canvas {
     display: block;
     cursor: none !important;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
 }

@@ -406,6 +406,7 @@ export class UaeContentValidator {
     private validateSequence(value: unknown, source: UaeSourceText, path: string): void {
         const sequence = this.record(value, source, path);
         this.id(sequence.id, source, `${path}.id`);
+        if (sequence.ui !== undefined) this.literal(sequence.ui, "hidden", source, `${path}.ui`);
         const actions = this.array(sequence.actions, source, `${path}.actions`);
         if (actions.length === 0) this.fail(source, `${path}.actions`, "expected at least one action");
         actions.forEach((actionValue, index) => {

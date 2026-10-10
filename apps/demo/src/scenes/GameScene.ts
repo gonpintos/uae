@@ -236,15 +236,16 @@ export class GameScene implements Scene {
                     this.classicUIInteractive = false;
                     this.drawScreen(context);
                 },
-                onStarted: () => {
-                    this.classicUIVisible = true;
+                onStarted: (sequence) => {
+                    this.classicUIVisible = sequence.ui !== "hidden";
                     this.classicUIInteractive = false;
                     this.hoveredTargetName = null;
                     this.hoveredVerbId = null;
                     this.drawScreen(context);
                 },
-                onFinished: ({endedScene}) => {
-                    this.classicUIVisible = true;
+                onFinished: ({endedScene, sequence}) => {
+                    this.classicUIVisible =
+                        !endedScene || sequence.ui !== "hidden";
                     this.classicUIInteractive =
                         !endedScene && !this.sceneEnded;
                     this.drawScreen(context);

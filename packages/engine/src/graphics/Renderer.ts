@@ -37,6 +37,9 @@ export interface RectangleOptions {
     strokeWidth?: number;
     strokeAlpha?: number;
 
+    /** Snap geometry to device pixels and keep it out of pointer hit testing. */
+    pixelPerfect?: boolean;
+
     layer?: number;
 }
 

@@ -100,6 +100,7 @@ export class UaeRuntimeAdapter {
             } satisfies DialogueData)),
             sequences: scene.sequences.map((sequence) => ({
                 id: sequence.id,
+                ui: sequence.ui,
                 actions: sequence.actions.map((action) => this.adaptSequenceAction(action))
             } satisfies ActionSequenceData)),
             controlledActorId: scene.controlledActor,

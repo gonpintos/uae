@@ -175,6 +175,7 @@ export type UaeSequenceAction =
 
 export interface UaeSequenceData {
     id: string;
+    ui?: "hidden";
     actions: UaeSequenceAction[];
 }
 

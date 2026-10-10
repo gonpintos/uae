@@ -594,6 +594,26 @@ salida de nodo.
 Una secuencia contiene acciones estrictamente ordenadas. Cada acción asincrónica
 termina antes de comenzar la siguiente.
 
+Una secuencia puede declarar una política de UI opcional:
+
+```yaml
+sequences:
+  - id: cinematic-sequence
+    ui: hidden
+    actions:
+      - type: say
+        actor: player
+        text: Una línea de la secuencia.
+```
+
+`ui: hidden` oculta completamente `ClassicAdventureUI` mientras se ejecuta la
+secuencia. La escena, los actores, ActorSpeech y el cursor continúan visibles y
+el input permanece bloqueado. Si la secuencia termina normalmente, la UI se
+restaura. Si ejecuta `endScene`, permanece oculta. Cuando `ui` se omite se
+conserva el comportamiento normal: UI visible, atenuada y no interactiva.
+
+El único valor admitido por v1 es `hidden`.
+
 Acciones v1:
 
 | Acción | Campos |
@@ -609,8 +629,9 @@ Acciones v1:
 terminan en idle. `say` usa ActorSpeech. `showTitle` permanece visible si luego
 se ejecuta `endScene`.
 
-Durante toda secuencia, la UI conserva su geometría y queda deshabilitada. Una
-secuencia normal devuelve el control; `endScene` lo mantiene bloqueado.
+Durante toda secuencia el input queda deshabilitado. Sin una política `ui`, la
+UI conserva su geometría y se atenúa. Una secuencia normal devuelve el control;
+`endScene` lo mantiene bloqueado.
 
 ## 12. Correspondencia con el runtime actual
 
@@ -671,6 +692,7 @@ Sin implementarlo todavía, el loader/runtime necesitará:
 - diálogos multinodo con `goto`, ciclos, salida, condiciones y efectos;
 - secuencias con `wait`, `say`, `moveTo`, `moveBySteps`, `showTitle` y
   `endScene`;
+- política opcional de secuencia `ui: hidden`;
 - entry sequence repetible o una vez por sesión;
 - validación previa de sintaxis, tipos y referencias;
 - derivación automática de assets requeridos.

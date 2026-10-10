@@ -143,6 +143,14 @@ assertContentError(
     [sceneFileName, ".item", "missing-item"]
 );
 
+assertContentError(
+    () => load(manifestText, sceneText.replace(
+        "ui: hidden",
+        "ui: dimmed"
+    )),
+    [sceneFileName, ".ui", 'expected "hidden"']
+);
+
 assertEqual(
     loaded.requiredAssetIds.length,
     11,
@@ -205,6 +213,13 @@ assertEqual(
     loaded.initialScene.sequences.length,
     2,
     "The complete scene should adapt all declared sequences"
+);
+assertEqual(
+    loaded.initialScene.sequences.find(
+        (sequence) => sequence.id === "buy-sunglasses"
+    )?.ui,
+    "hidden",
+    "The sequence UI policy should reach runtime data"
 );
 assertEqual(
     loaded.items[0]?.name,

@@ -5,11 +5,15 @@ import {
     type MovementDelay
 } from "../actor/ActorMovementController";
 import type { ActionSequenceCollection } from "./ActionSequenceCollection";
-import type { ActionSequenceStep } from "./ActionSequenceData";
+import type {
+    ActionSequenceData,
+    ActionSequenceStep
+} from "./ActionSequenceData";
 
 export type SequenceDelay = MovementDelay;
 
 export interface ActionSequenceCompletion {
+    sequence: ActionSequenceData;
     endedScene: boolean;
     cancelled: boolean;
 }
@@ -19,7 +23,7 @@ export interface ActionSequenceCallbacks {
     onSay(actor: Actor, message: string): void | Promise<void>;
     onShowTitle(text: string): void;
     onEndScene(): void;
-    onStarted?(): void;
+    onStarted?(sequence: ActionSequenceData): void;
     onFinished?(completion: ActionSequenceCompletion): void;
 }
 
@@ -79,7 +83,7 @@ export class ActionSequenceRunner {
         this.endedScene = false;
 
         try {
-            this.callbacks.onStarted?.();
+            this.callbacks.onStarted?.(sequence);
 
             for (const action of sequence.actions) {
                 if (this.cancelled) {
@@ -95,6 +99,7 @@ export class ActionSequenceRunner {
         } finally {
             this.running = false;
             this.callbacks.onFinished?.({
+                sequence,
                 endedScene: this.endedScene,
                 cancelled: this.cancelled
             });
