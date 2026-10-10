@@ -12,7 +12,7 @@ export const demoRoomData: RoomData = {
         {
             id: "copenhagen-street-background",
             x: 0,
-            y: 0,
+            y: -85,
             width: 1280,
             height: 720,
             imageAssetId: "copenhagen-street",
@@ -36,7 +36,8 @@ export const demoRoomData: RoomData = {
             y: 266,
             width: 440,
             height: 264,
-            interactionPosition: demoInteractionPositions["sunglasses-stand"]
+            interactionPosition: demoInteractionPositions["sunglasses-stand"],
+            defaultVerb: "look"
         },
         {
             id: "fede",
@@ -46,7 +47,8 @@ export const demoRoomData: RoomData = {
             y: 253,
             width: 150,
             height: 272,
-            interactionPosition: demoInteractionPositions.fede
+            interactionPosition: demoInteractionPositions.fede,
+            defaultVerb: "talkTo"
         },
         {
             id: "gon",
@@ -56,7 +58,8 @@ export const demoRoomData: RoomData = {
             y: 253,
             width: 150,
             height: 272,
-            interactionPosition: demoInteractionPositions.gon
+            interactionPosition: demoInteractionPositions.gon,
+            defaultVerb: "talkTo"
         }
     ]
 };

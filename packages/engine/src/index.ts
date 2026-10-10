@@ -39,6 +39,7 @@ export * from "./intro/IntroRenderer";
 export * from "./intro/IntroScene";
 
 export * from "./interaction/Rectangle";
+export * from "./interaction/DefaultVerb";
 export * from "./interaction/Hotspot";
 export * from "./interaction/HotspotCollection";
 export * from "./interaction/InteractionResult";

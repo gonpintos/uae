@@ -5,6 +5,7 @@ import {
     type Rectangle
 } from "./Rectangle";
 import type { InteractionAction } from "./InteractionAction";
+import type { DefaultVerb } from "./DefaultVerb";
 
 export type HotspotInteraction = InteractionAction;
 
@@ -16,6 +17,7 @@ export interface HotspotOptions extends Rectangle {
     /** Ground anchor where the controlled actor stands to interact. */
     interactionPosition?: Point;
     interaction?: HotspotInteraction;
+    defaultVerb?: DefaultVerb;
 }
 
 export class Hotspot {
@@ -31,6 +33,8 @@ export class Hotspot {
 
     public readonly interactionPosition: Point | null;
 
+    public readonly defaultVerb: DefaultVerb | null;
+
     public constructor(options: HotspotOptions) {
         this.id = options.id;
         this.name = options.name ?? options.id;
@@ -44,6 +48,7 @@ export class Hotspot {
         };
 
         this.interaction = options.interaction ?? null;
+        this.defaultVerb = options.defaultVerb ?? null;
         this.interactionPosition = options.interactionPosition
             ? {...options.interactionPosition}
             : null;

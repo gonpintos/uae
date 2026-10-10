@@ -1,6 +1,7 @@
 import { RenderLayer } from "../../../packages/engine/src/graphics/RenderLayer";
 import type { Renderer } from "../../../packages/engine/src/graphics/Renderer";
 import { InteractionExecutor } from "../../../packages/engine/src/interaction/InteractionExecutor";
+import { DefaultVerbResolver } from "../../../packages/engine/src/interaction/DefaultVerb";
 import { VerbInteractionCollection } from "../../../packages/engine/src/interaction/VerbInteractionCollection";
 import { Inventory } from "../../../packages/engine/src/inventory/Inventory";
 import { InventoryItemCatalog } from "../../../packages/engine/src/inventory/InventoryItemCatalog";
@@ -131,8 +132,21 @@ assert(
     "The calculator should be selectable from the inventory."
 );
 
+const defaultVerbs = new DefaultVerbResolver(state, inventory);
+const calculatorItem = inventory.items.find(
+    (item) => item.id === selectedItemId
+);
+const calculatorDefaultVerb = defaultVerbs.resolve(
+    calculatorItem?.defaultVerb
+);
+
+assert(
+    calculatorDefaultVerb === "use",
+    "Direct inventory clicks should resolve the item's declared default verb."
+);
+
 const calculatorUse = executor.execute(
-    selectedVerb ?? "look",
+    calculatorDefaultVerb ?? "look",
     selectedItemId ?? ""
 );
 
@@ -140,6 +154,35 @@ assert(
     calculatorUse.type === "say" &&
         calculatorUse.message === "No tengo la cotización de la corona danesa.",
     "Use plus calculator should execute its highest-priority conditional response."
+);
+
+state.setValue("door-open", false);
+assert(
+    defaultVerbs.resolve([
+        {
+            verb: "close",
+            conditions: [
+                {
+                    type: "state",
+                    key: "door-open",
+                    operator: "equals",
+                    value: true
+                }
+            ]
+        },
+        {
+            verb: "open",
+            conditions: [
+                {
+                    type: "state",
+                    key: "door-open",
+                    operator: "equals",
+                    value: false
+                }
+            ]
+        }
+    ]) === "open",
+    "Conditional defaults should be ready to resolve future state-dependent verbs."
 );
 assert(
     drawnLayers.every(

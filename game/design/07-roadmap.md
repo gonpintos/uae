@@ -9,3 +9,13 @@
 - [ ] Classic bottom UI layout
 - [ ] Fixed verbs + inventory bar
 - [ ] Monkey Island style pointer
+
+## Interaction UX
+
+- [ ] Right-click default action
+- [ ] Declarative default verb per target
+- [ ] Dynamic default verb by state
+- [ ] Inventory default verb on hover
+- [ ] Single-click executes inventory default action
+- [ ] Inventory scroll arrows
+- [ ] Inventory pagination / overflow handling

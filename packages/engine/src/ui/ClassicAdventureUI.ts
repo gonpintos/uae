@@ -14,11 +14,16 @@ import {
     type VerbId
 } from "../verb/VerbData";
 import { ActionLine } from "./ActionLine";
-import { InventoryPanel } from "./InventoryPanel";
+import {
+    InventoryPanel,
+    type InventoryScrollDirection
+} from "./InventoryPanel";
 import { VerbPanel } from "./VerbPanel";
 
 export interface ClassicAdventureUIView {
     selectedVerb: VerbId;
+    /** Temporary verb shown for hover previews without changing selection. */
+    displayVerb?: VerbId | null;
     targetName: string | null;
     statusMessage?: string;
     items: readonly InventoryItemData[];
@@ -113,12 +118,16 @@ export class ClassicAdventureUI {
             height: controlsHeight
         };
         const actionText = view.targetName
-            ? this.actionLine.buildText(view.selectedVerb, view.targetName)
+            ? this.actionLine.buildText(
+                view.displayVerb ?? view.selectedVerb,
+                view.targetName
+            )
             : view.statusMessage ||
                 this.actionLine.buildText(view.selectedVerb, null);
+        const displayedVerb = view.displayVerb ?? view.selectedVerb;
 
         this.actionLine.draw(renderer, actionBounds, actionText);
-        this.verbPanel.draw(renderer, view.selectedVerb, verbBounds);
+        this.verbPanel.draw(renderer, displayedVerb, verbBounds);
         this.inventoryPanel.draw(
             renderer,
             view.items,
@@ -170,6 +179,20 @@ export class ClassicAdventureUI {
         }
 
         return this.inventoryPanel.findItemAt(position);
+    }
+
+    public findInventoryScrollAt(
+        position: PointerPosition
+    ): InventoryScrollDirection | null {
+        if (!this.interactive) {
+            return null;
+        }
+
+        return this.inventoryPanel.findScrollAt(position);
+    }
+
+    public scrollInventory(direction: InventoryScrollDirection): boolean {
+        return this.inventoryPanel.scroll(direction);
     }
 
     public buildActionText(

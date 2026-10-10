@@ -5,6 +5,7 @@ import { Hotspot } from "../../../packages/engine/src/interaction/Hotspot";
 import { DialogueCollection } from "../../../packages/engine/src/dialogue/DialogueCollection";
 import { DialogueSession } from "../../../packages/engine/src/dialogue/DialogueSession";
 import { InteractionExecutor } from "../../../packages/engine/src/interaction/InteractionExecutor";
+import { DefaultVerbResolver } from "../../../packages/engine/src/interaction/DefaultVerb";
 import { VerbInteractionCollection } from "../../../packages/engine/src/interaction/VerbInteractionCollection";
 import { Inventory } from "../../../packages/engine/src/inventory/Inventory";
 import { InventoryItemCatalog } from "../../../packages/engine/src/inventory/InventoryItemCatalog";
@@ -86,7 +87,8 @@ async function runTest(): Promise<void> {
                     y: 253,
                     width: 150,
                     height: 272,
-                    interactionPosition: demoInteractionPositions.fede
+                    interactionPosition: demoInteractionPositions.fede,
+                    defaultVerb: "talkTo"
                 }
             ]
         }
@@ -123,6 +125,24 @@ async function runTest(): Promise<void> {
         throw new Error("Fede hotspot should exist.");
     }
 
+    const defaultVerbs = new DefaultVerbResolver(state, inventory);
+    const rightClickVerb = defaultVerbs.resolveTarget(
+        "secondary",
+        "look",
+        fede.defaultVerb
+    );
+
+    assertEqual(
+        rightClickVerb,
+        "talkTo",
+        "Right-click should resolve the NPC's declared default verb"
+    );
+    assertEqual(
+        defaultVerbs.resolveTarget("primary", "look", fede.defaultVerb),
+        "look",
+        "Left-click should preserve the currently selected verb"
+    );
+
     assert(
         roomManager.currentRoom.canWalkTo({x: franco.x, y: franco.y}),
         "Franco's foot anchor should start inside the walkable polygon"
@@ -139,7 +159,7 @@ async function runTest(): Promise<void> {
             interactionPositionX = franco.x;
             facingAtInteraction = `${franco.facing}:${fedeActor.facing}`;
 
-            const result = interactions.execute("talkTo", fede.id);
+            const result = interactions.execute(rightClickVerb ?? "", fede.id);
 
             if (result.type !== "startDialogue") {
                 throw new Error("talkTo + Fede should resolve to a dialogue.");
@@ -189,7 +209,7 @@ async function runTest(): Promise<void> {
 
     const angledOutsideAccepted = await navigation.walkToPoint(
         "franco",
-        {x: 30, y: 500}
+        {x: 30, y: 430}
     );
 
     assert(
@@ -200,7 +220,7 @@ async function runTest(): Promise<void> {
     const beforeOutsideClick = {x: franco.x, y: franco.y};
     const outsideAccepted = await navigation.walkToPoint(
         "franco",
-        {x: 500, y: 450}
+        {x: 500, y: 380}
     );
 
     assert(!outsideAccepted, "A point outside the walkable area should be rejected");

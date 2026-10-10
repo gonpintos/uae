@@ -212,12 +212,16 @@ assert(
     "Inventory cells should primarily render the declared icon"
 );
 
+const temporarilyPreviewedVerbs = new VerbController();
+
+temporarilyPreviewedVerbs.select("look");
 texts.length = 0;
 ui.draw(
     renderer,
     interfaceBounds,
     {
-        selectedVerb: "use",
+        selectedVerb: temporarilyPreviewedVerbs.selectedVerb,
+        displayVerb: "use",
         targetName: "Calculadora",
         items: inventory.items
     },
@@ -225,7 +229,103 @@ ui.draw(
 );
 assert(
     texts.some((entry) => entry.text === "Usar Calculadora"),
-    "Hovering an inventory icon should update ActionLine with verb and item name"
+    "Hovering an inventory icon should preview its default verb in ActionLine"
+);
+assertEqual(
+    temporarilyPreviewedVerbs.selectedVerb,
+    "look",
+    "Inventory hover should not permanently change the selected verb"
+);
+
+texts.length = 0;
+ui.draw(
+    renderer,
+    interfaceBounds,
+    {
+        selectedVerb: temporarilyPreviewedVerbs.selectedVerb,
+        targetName: "Calculadora",
+        items: inventory.items
+    },
+    new AssetCatalog(demoAssets)
+);
+assert(
+    texts.some((entry) => entry.text === "Mirar Calculadora"),
+    "Leaving inventory hover should restore the previously selected verb"
+);
+
+const overflowItems = Array.from({length: 8}, (_, index) => ({
+    id: `item-${index + 1}`,
+    name: `Item ${index + 1}`,
+    defaultVerb: "look"
+}));
+const pagedInventory = new InventoryPanel();
+const inventoryBounds = {x: 720, y: 574, width: 548, height: 134};
+
+texts.length = 0;
+pagedInventory.draw(renderer, overflowItems, undefined, inventoryBounds);
+
+assert(
+    texts.some((entry) => entry.text === "◀") &&
+        texts.some((entry) => entry.text === "▶"),
+    "Inventory arrows should appear only when items overflow"
+);
+assertEqual(
+    pagedInventory.pageCount,
+    2,
+    "Overflow should create multiple inventory pages"
+);
+
+const firstVisibleItems = [...pagedInventory.visibleItemIds];
+const nextScrollPosition = {x: 1238, y: 640};
+
+assertEqual(
+    pagedInventory.findScrollAt(nextScrollPosition),
+    "next",
+    "The next inventory arrow should consume its own click"
+);
+assert(
+    pagedInventory.scroll("next"),
+    "Clicking next should advance the inventory page"
+);
+
+pagedInventory.draw(renderer, overflowItems, undefined, inventoryBounds);
+
+assert(
+    pagedInventory.visibleItemIds.some(
+        (itemId) => !firstVisibleItems.includes(itemId)
+    ),
+    "Scrolling should change the visible inventory items"
+);
+
+const overflowUi = new ClassicAdventureUI();
+
+overflowUi.draw(
+    renderer,
+    interfaceBounds,
+    {
+        selectedVerb: "goTo",
+        targetName: null,
+        items: overflowItems
+    }
+);
+assertEqual(
+    overflowUi.findInventoryScrollAt(nextScrollPosition),
+    "next",
+    "Classic UI should expose inventory scroll controls"
+);
+assert(
+    overflowUi.contains(nextScrollPosition),
+    "Inventory scroll clicks should stay inside the UI and never reach the scene"
+);
+
+const fittingInventory = new InventoryPanel();
+
+texts.length = 0;
+fittingInventory.draw(renderer, overflowItems.slice(0, 6), undefined, inventoryBounds);
+assert(
+    !texts.some((entry) => entry.text === "◀" || entry.text === "▶") &&
+        fittingInventory.pageCount === 1,
+    "Inventory arrows should stay hidden while all items fit"
 );
 
 const verbs = new VerbController();
@@ -250,7 +350,13 @@ assertEqual(
     "Finishing a conversation should return to the configured default verb"
 );
 
-type Listener = (event: {clientX: number; clientY: number}) => void;
+type ListenerEvent = {
+    clientX: number;
+    clientY: number;
+    button?: number;
+    preventDefault?: () => void;
+};
+type Listener = (event: ListenerEvent) => void;
 const listeners = new Map<string, Listener>();
 const fakeTarget = {
     style: {cursor: "default"},
@@ -271,6 +377,34 @@ input.initialize(
 const unsubscribeMove = input.onPointerMove((position) => {
     pointerState.value = position;
 });
+const pressedButtons: string[] = [];
+const unsubscribeDown = input.onPointerDown((_position, button) => {
+    pressedButtons.push(button);
+});
+
+let secondaryPrevented = false;
+
+listeners.get("pointerdown")?.({
+    clientX: 200,
+    clientY: 100,
+    button: 2,
+    preventDefault: () => {
+        secondaryPrevented = true;
+    }
+});
+listeners.get("pointerdown")?.({
+    clientX: 200,
+    clientY: 100,
+    button: 0,
+    preventDefault: () => undefined
+});
+
+assertEqual(
+    pressedButtons.join(","),
+    "secondary,primary",
+    "Browser input should distinguish right and left pointer buttons"
+);
+assert(secondaryPrevented, "Right-click should suppress the browser's native action");
 
 listeners.get("pointermove")?.({clientX: 200, clientY: 100});
 
@@ -317,6 +451,7 @@ assertEqual(
 );
 
 unsubscribeMove();
+unsubscribeDown();
 input.destroy();
 assertEqual(fakeTarget.style.cursor, "", "The normal cursor should be restored after leaving the game input lifecycle");
 

@@ -37,6 +37,10 @@ export class BrowserInputManager
         const listener = (
             event: PointerEvent
         ): void => {
+            if (event.button !== 0 && event.button !== 2) {
+                return;
+            }
+
             const browserPosition = {
                 x: event.clientX,
                 y: event.clientY
@@ -49,19 +53,31 @@ export class BrowserInputManager
                 return;
             }
 
-            handler(logicalPosition);
+            if (event.button === 2) {
+                event.preventDefault();
+            }
+
+            handler(
+                logicalPosition,
+                event.button === 2 ? "secondary" : "primary"
+            );
+        };
+        const contextMenuListener = (event: Event): void => {
+            event.preventDefault();
         };
 
         target.addEventListener(
             "pointerdown",
             listener
         );
+        target.addEventListener("contextmenu", contextMenuListener);
 
         return () => {
             target.removeEventListener(
                 "pointerdown",
                 listener
             );
+            target.removeEventListener("contextmenu", contextMenuListener);
         };
     }
 

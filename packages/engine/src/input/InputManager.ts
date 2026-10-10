@@ -2,8 +2,11 @@ import type { Point } from "../math/Point";
 
 export type PointerPosition = Point;
 
+export type PointerButton = "primary" | "secondary";
+
 export type PointerDownHandler = (
-    position: PointerPosition
+    position: PointerPosition,
+    button: PointerButton
 ) => void;
 
 export type PointerMoveHandler = (
