@@ -37,12 +37,12 @@ entities:
   - id: franco
     kind: actor
     displayName: Franco
-    position: {x: 656, y: 525}
+    position: {x: 656, y: 480}
     speechColor: "#fff3a6"
     walkSpeedPixelsPerSecond: 250
     initialFacing: right
     visual:
-      size: {width: 192, height: 272}
+      size: {width: 192, height: 260}
       animations:
         sourceFacing: right
         idle:
@@ -58,35 +58,35 @@ entities:
   - id: fede
     kind: actor
     displayName: Fede
-    position: {x: 856, y: 525}
+    position: {x: 856, y: 480}
     speechColor: "#d8b4fe"
     initialFacing: left
     visual:
-      size: {width: 192, height: 272}
+      size: {width: 192, height: 260}
       animations:
         sourceFacing: right
         idle:
           frames: [fede-idle]
     hotspot:
-      bounds: {x: 800, y: 253, width: 150, height: 272}
-    interactionPosition: {x: 740, y: 525}
+      bounds: {x: 800, y: 253, width: 150, height: 260}
+    interactionPosition: {x: 740, y: 480}
     defaultVerb: talkTo
 
   - id: gon
     kind: actor
     displayName: Gon
-    position: {x: 1056, y: 525}
+    position: {x: 1056, y: 480}
     speechColor: "#9fe8ff"
     initialFacing: left
     visual:
-      size: {width: 192, height: 272}
+      size: {width: 192, height: 260}
       animations:
         sourceFacing: right
         idle:
           frames: [gon-idle]
     hotspot:
-      bounds: {x: 1000, y: 253, width: 150, height: 272}
-    interactionPosition: {x: 940, y: 525}
+      bounds: {x: 1000, y: 253, width: 150, height: 260}
+    interactionPosition: {x: 940, y: 480}
     defaultVerb: talkTo
 
   - id: sunglasses-stand
@@ -94,7 +94,7 @@ entities:
     displayName: Tienda de anteojos
     visual:
       asset: sunglasses-stand
-      bounds: {x: 40, y: 266, width: 440, height: 264}
+      bounds: {x: 40, y: 226, width: 440, height: 264}
     hotspot: true
     interactionPosition: {x: 536, y: 525}
     defaultVerb: look
